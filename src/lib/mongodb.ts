@@ -29,6 +29,7 @@ export async function connectToDatabase() {
   if (!cached.promise) {
     const opts = {
       bufferCommands: false,
+      dbName: 'kisan_portal'
     }
 
     cached.promise = mongoose.connect(uri, opts).then((m) => {

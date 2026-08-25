@@ -1,0 +1,68 @@
+{
+  "Common": {
+    "appName": "Kisan Portal",
+    "department": "Department of Agricultural Procurement",
+    "welcome": "Welcome to Kisan Portal",
+    "login": "Login",
+    "register": "Register",
+    "home": "Home",
+    "howItWorks": "How it works",
+    "services": "Services",
+    "centres": "Procurement Centres",
+    "help": "Help & Support",
+    "dashboard": "Dashboard",
+    "logout": "Logout",
+    "language": "Language",
+    "demoNotice": "Demonstration & Prototype Platform",
+    "demoSub": "Department of Agriculture & Farmers Welfare, Govt. of India"
+  },
+  "Landing": {
+    "heroTitle": "Transparent, Easy & Accessible Agricultural Procurement",
+    "heroSubtitle": "Direct MSP Procurement portal for Indian farmers. Book slots, track live tokens, and get direct bank disbursements with complete transparency.",
+    "bookSlot": "Book Procurement Slot",
+    "findCentre": "Find Nearest Centre",
+    "checkToken": "Track Live Token",
+    "checkStatus": "Payment Status",
+    "servicesTitle": "Direct Farmer Services",
+    "statisticsTitle": "National Procurement Statistics",
+    "totalProcured": "Quintals Procured",
+    "totalFarmers": "Registered Farmers",
+    "totalDisbursed": "Disbursed via DBT",
+    "activeCentres": "Active Centres",
+    "howItWorksTitle": "Simple 4-Step Procurement Process",
+    "faqTitle": "Frequently Asked Questions",
+    "announcementsTitle": "Official Government Announcements"
+  },
+  "Farmer": {
+    "dashboard": "Farmer Dashboard",
+    "slotBooking": "Book Slot",
+    "liveQueue": "Live Queue",
+    "procurement": "Procurement",
+    "payments": "DBT Payments",
+    "history": "History",
+    "notifications": "Notifications",
+    "profile": "Profile",
+    "grievance": "Grievance Redressal"
+  },
+  "Worker": {
+    "dashboard": "Centre Manager Dashboard",
+    "queue": "Token Queue Board",
+    "farmers": "Farmer Lookup",
+    "procurementForm": "Procurement Entry",
+    "history": "Centre History",
+    "profile": "Worker Profile"
+  },
+  "Admin": {
+    "dashboard": "HQ Admin Dashboard",
+    "farmers": "Farmers Directory",
+    "workers": "Staff Management",
+    "centres": "Procurement Centres",
+    "bookings": "Global Bookings",
+    "procurement": "Procurement Records",
+    "payments": "Payment Disbursals",
+    "grievances": "Grievance Portal",
+    "reports": "System Reports",
+    "notifications": "Broadcast Notification",
+    "auditLogs": "Audit Trail Logs"
+  }
+}

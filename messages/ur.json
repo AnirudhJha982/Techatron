@@ -1,0 +1,68 @@
+{
+  "Common": {
+    "appName": "کسان پورٹل",
+    "department": "محکمہ زرعی خرید",
+    "welcome": "کسان پورٹل میں خوش آمدید",
+    "login": "لاگ ان",
+    "register": "رجسٹر کریں",
+    "home": "ہوم",
+    "howItWorks": "یہ کیسے کام کرتا ہے",
+    "services": "خدمات",
+    "centres": "خریداری کے مراکزی",
+    "help": "مدد اور تعاون",
+    "dashboard": "ڈیش بورڈ",
+    "logout": "لاگ آؤٹ",
+    "language": "زبان",
+    "demoNotice": "ڈیمو اور پروٹو ٹائپ پلیٹ فارم",
+    "demoSub": "وزارت زراعت و کسان بہبود، حکومت ہند"
+  },
+  "Landing": {
+    "heroTitle": "شفاف، آسان اور قابل رسائی زرعی خرید",
+    "heroSubtitle": "بھارتی کسانوں کے لیے براہ راست ایم ایس پی خرید پورٹل۔ سلاٹ بک کریں، لائیو ٹوکن ٹریک کریں اور براہ راست بینک ادائیگی حاصل کریں۔",
+    "bookSlot": "خریداری سلاٹ بک کریں",
+    "findCentre": "قریبی مرکز تلاش کریں",
+    "checkToken": "لائیو ٹوکن ٹریک کریں",
+    "checkStatus": "ادائیگی کی صورتحال",
+    "servicesTitle": "براہ راست کسان خدمات",
+    "statisticsTitle": "قومی خریداری شماریات",
+    "totalProcured": "خرید شدہ کوئنٹل",
+    "totalFarmers": "رجسٹرڈ کسان",
+    "totalDisbursed": "DBT کے ذریعے منتقل شدہ",
+    "activeCentres": "فعال مراکز",
+    "howItWorksTitle": "آسان 4 مرحلہ وار خرید کا طریقہ",
+    "faqTitle": "عامیانہ سوالات",
+    "announcementsTitle": "سارکاری اعلانات"
+  },
+  "Farmer": {
+    "dashboard": "کسان ڈیش بورڈ",
+    "slotBooking": "سلاٹ بک کریں",
+    "liveQueue": "لائیو قطار",
+    "procurement": "خریداری",
+    "payments": "DBT ادائیگیاں",
+    "history": "ہسٹری",
+    "notifications": "اطلاعات",
+    "profile": "پروفائل",
+    "grievance": "شکایت کا ازالہ"
+  },
+  "Worker": {
+    "dashboard": "مرکز مینیجر ڈیش بورڈ",
+    "queue": "ٹوکن قطار بورڈ",
+    "farmers": "کسان تلاش",
+    "procurementForm": "خریداری اندراج",
+    "history": "مرکز ہسٹری",
+    "profile": "اسٹاف پروفائل"
+  },
+  "Admin": {
+    "dashboard": "ہیڈ کوارٹر ایڈمن ڈیش بورڈ",
+    "farmers": "کسان ڈائریکٹری",
+    "workers": "اسٹاف مینجمنٹ",
+    "centres": "خریداری مراکزی",
+    "bookings": "گلوبل بکنگ",
+    "procurement": "خریداری ریکارڈ",
+    "payments": "ادائیگی کی تقسیم",
+    "grievances": "شکایت پورٹل",
+    "reports": "سسٹم رپورٹس",
+    "notifications": "براڈکاسٹ الرٹ",
+    "auditLogs": "آڈٹ لاگز"
+  }
+}

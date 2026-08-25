@@ -1,0 +1,68 @@
+{
+  "Common": {
+    "appName": "કિસાન પોર્ટલ",
+    "department": "કૃષિ ખરીદ વિભાગ",
+    "welcome": "કિસાન પોર્ટલ પર આપનું સ્વાગત છે",
+    "login": "લોગિન",
+    "register": "રજિસ્ટર",
+    "home": "હોમ",
+    "howItWorks": "કેવી રીતે કામ કરે છે",
+    "services": "સેવાઓ",
+    "centres": "ખરીદ કેન્દ્રો",
+    "help": "મદદ અને સપોર્ટ",
+    "dashboard": "ડેશબોર્ડ",
+    "logout": "લોગઆઉટ",
+    "language": "ભાષા",
+    "demoNotice": "ડેમોન્સ્ટ્રેશન અને પ્રોટોટાઇપ પ્લેટફોર્મ",
+    "demoSub": "કૃષિ અને ખેડૂત કલ્યાણ મંત્રાલય, ભારત સરકાર"
+  },
+  "Landing": {
+    "heroTitle": "પારદર્શક, સરળ અને સુલભ કૃષિ ખરીદી",
+    "heroSubtitle": "ભારતીય ખેડૂતો માટે ડાયરેક્ટ MSP ખરીદ પોર્ટલ. સ્લોટ બુક કરો, લાઇવ ટોકન ટ્રેક કરો અને સીધા બેંક ખાતામાં ચૂકવણી મેળવો.",
+    "bookSlot": "ખરીદ સ્લોટ બુક કરો",
+    "findCentre": "નજીકનું કેન્દ્ર શોધો",
+    "checkToken": "લાઇવ ટોકન ટ્રેક કરો",
+    "checkStatus": "ચૂકવણી સ્થિતિ",
+    "servicesTitle": "ડાયરેક્ટ ખેડૂત સેવાઓ",
+    "statisticsTitle": "રાષ્ટ્રીય ખરીદ આંકડા",
+    "totalProcured": "ખરીદ કરેલ ક્વિન્ટલ",
+    "totalFarmers": "રજિસ્ટર્ડ ખેડૂતો",
+    "totalDisbursed": "DBT દ્વારા ચૂકવેલ",
+    "activeCentres": "સક્રિય કેન્દ્રો",
+    "howItWorksTitle": "સરળ 4-પગલાની ખરીદ પ્રક્રિયા",
+    "faqTitle": "વારંવાર પૂછાતા પ્રશ્નો",
+    "announcementsTitle": "સત્તાવાર સરકારી જાહેરાતો"
+  },
+  "Farmer": {
+    "dashboard": "ખેડૂત ડેશબોર્ડ",
+    "slotBooking": "સ્લોટ બુક કરો",
+    "liveQueue": "લાઇવ ક્યુ",
+    "procurement": "ખરીદી",
+    "payments": "DBT ચૂકવણી",
+    "history": "ઇતિહાસ",
+    "notifications": "સૂચનાઓ",
+    "profile": "પ્રોફાઇલ",
+    "grievance": "ફરિયાદ નિવારણ"
+  },
+  "Worker": {
+    "dashboard": "કેન્દ્ર મેનેજર ડેશબોર્ડ",
+    "queue": "ટોકન ક્યુ બોર્ડ",
+    "farmers": "ખેડૂત શોધો",
+    "procurementForm": "ખરીદ નોંધણી",
+    "history": "કેન્દ્ર ઇતિહાસ",
+    "profile": "સ્ટાફ પ્રોફાઇલ"
+  },
+  "Admin": {
+    "dashboard": "વડું મથક એડમિન ડેશબોર્ડ",
+    "farmers": "ખેડૂત ડિરેક્ટરી",
+    "workers": "સ્ટાફ મેનેજમેન્ટ",
+    "centres": "ખરીદ કેન્દ્રો",
+    "bookings": "ગ્લોબલ બુકિંગ",
+    "procurement": "ખરીદ રેકોર્ડ્સ",
+    "payments": "ચૂકવણી વિતરણ",
+    "grievances": "ફરિયાદ પોર્ટલ",
+    "reports": "સિસ્ટમ રિપોર્ટ્સ",
+    "notifications": "બ્રોડકાસ્ટ એલર્ટ",
+    "auditLogs": "ઓડિટ ટ્રેઇલ લોગ્સ"
+  }
+}

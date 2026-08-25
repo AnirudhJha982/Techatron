@@ -1,0 +1,164 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String    @id @default(cuid())
+  name           String
+  phoneNumber    String    @unique
+  passwordHash   String
+  role           String    @default("FARMER") // "FARMER", "WORKER", "ADMIN"
+  language       String    @default("en")
+  
+  farmerProfile  FarmerProfile?
+  workerProfile  WorkerProfile?
+  adminProfile   AdminProfile?
+  
+  grievances     Grievance[]
+  notifications  Notification[]
+  auditLogs      AuditLog[]
+  
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model FarmerProfile {
+  id             String    @id @default(cuid())
+  userId         String    @unique
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  address        String?
+  village        String?
+  district       String?
+  state          String?
+  landSizeAcres  Float?
+  
+  bookings       Booking[]
+}
+
+model WorkerProfile {
+  id             String    @id @default(cuid())
+  userId         String    @unique
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  centreId       String
+  centre         ProcurementCentre @relation(fields: [centreId], references: [id])
+  
+  procurements   Procurement[]
+}
+
+model AdminProfile {
+  id             String    @id @default(cuid())
+  userId         String    @unique
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  department     String?
+}
+
+model ProcurementCentre {
+  id             String    @id @default(cuid())
+  name           String
+  state          String
+  district       String
+  address        String
+  capacityPerDay Int
+  isActive       Boolean   @default(true)
+  
+  workers        WorkerProfile[]
+  slots          Slot[]
+  bookings       Booking[]
+  
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model Slot {
+  id             String    @id @default(cuid())
+  centreId       String
+  date           DateTime
+  timeSlot       String    // e.g. "09:00-12:00"
+  capacity       Int
+  
+  centre         ProcurementCentre @relation(fields: [centreId], references: [id], onDelete: Cascade)
+  bookings       Booking[]
+  
+  @@unique([centreId, date, timeSlot])
+}
+
+model Booking {
+  id             String    @id @default(cuid())
+  farmerId       String
+  centreId       String
+  slotId         String
+  date           DateTime
+  tokenNumber    String    @unique // e.g. A-042
+  queuePosition  Int?
+  status         String    @default("SCHEDULED") // SCHEDULED, ARRIVED, PROCESSING, COMPLETED, CANCELLED, NO_SHOW
+  
+  farmer         FarmerProfile @relation(fields: [farmerId], references: [id])
+  centre         ProcurementCentre @relation(fields: [centreId], references: [id])
+  slot           Slot @relation(fields: [slotId], references: [id])
+  procurement    Procurement?
+  
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model Procurement {
+  id             String    @id @default(cuid())
+  bookingId      String    @unique
+  workerId       String
+  crop           String
+  quantity       Float     // In Quintals
+  qualityGrade   String
+  moistureLevel  Float?
+  status         String    @default("PENDING") // PENDING, GRADED, APPROVED, REJECTED
+  paymentStatus  String    @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED
+  remarks        String?
+  
+  booking        Booking   @relation(fields: [bookingId], references: [id])
+  worker         WorkerProfile @relation(fields: [workerId], references: [id])
+  
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model Grievance {
+  id             String    @id @default(cuid())
+  userId         String
+  category       String
+  description    String
+  status         String    @default("SUBMITTED") // SUBMITTED, UNDER_REVIEW, IN_PROGRESS, RESOLVED, CLOSED
+  response       String?
+  
+  user           User      @relation(fields: [userId], references: [id])
+  
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model Notification {
+  id             String    @id @default(cuid())
+  userId         String
+  title          String
+  message        String
+  category       String    // BOOKING, TOKEN, PAYMENT, GENERAL
+  isRead         Boolean   @default(false)
+  
+  user           User      @relation(fields: [userId], references: [id])
+  
+  createdAt      DateTime  @default(now())
+}
+
+model AuditLog {
+  id             String    @id @default(cuid())
+  userId         String?
+  action         String
+  details        String
+  
+  user           User?     @relation(fields: [userId], references: [id])
+  
+  createdAt      DateTime  @default(now())
+}

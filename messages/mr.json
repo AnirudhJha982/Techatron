@@ -1,0 +1,68 @@
+{
+  "Common": {
+    "appName": "किसान पोर्टल",
+    "department": "कृषी खरेदी विभाग",
+    "welcome": "किसान पोर्टलवर आपले स्वागत आहे",
+    "login": "लॉगिन",
+    "register": "नोंदणी करा",
+    "home": "मुख्यपृष्ठ",
+    "howItWorks": "हे कसे कार्य करते",
+    "services": "सेवा",
+    "centres": "खरेदी केंद्रे",
+    "help": "मदत आणि पाठिंबा",
+    "dashboard": "डॅशबोर्ड",
+    "logout": "लॉगआउट",
+    "language": "भाषा",
+    "demoNotice": "प्रात्यक्षिक आणि नमुना प्लॅटफॉर्म",
+    "demoSub": "कृषी आणि शेतकरी कल्याण विभाग, भारत सरकार"
+  },
+  "Landing": {
+    "heroTitle": "पारदर्शक, सुलभ आणि सुलभ कृषी खरेदी",
+    "heroSubtitle": "भारतीय शेतकऱ्यांसाठी थेट MSP खरेदी पोर्टल. स्लॉट बुक करा, थेट टोकन ट्रॅक करा आणि थेट बँक हस्तांतरण मिळवा.",
+    "bookSlot": "खरेदी स्लॉट बुक करा",
+    "findCentre": "जवळचे केंद्र शोधा",
+    "checkToken": "थेट टोकन ट्रॅक करा",
+    "checkStatus": "पेमेंट स्थिती",
+    "servicesTitle": "थेट शेतकरी सेवा",
+    "statisticsTitle": "राष्ट्रीय खरेदी आकडेवारी",
+    "totalProcured": "खरेदी केलेले क्विंटल",
+    "totalFarmers": "नोंदणीकृत शेतकरी",
+    "totalDisbursed": "DBT द्वारे वितरित",
+    "activeCentres": "सक्रिय केंद्रे",
+    "howItWorksTitle": "सोपी 4-टप्प्यांची खरेदी प्रक्रिया",
+    "faqTitle": "सतत विचारले जाणारे प्रश्न",
+    "announcementsTitle": "अधिकृत सरकारी घोषणा"
+  },
+  "Farmer": {
+    "dashboard": "शेतकरी डॅशबोर्ड",
+    "slotBooking": "स्लॉट बुक करा",
+    "liveQueue": "थेट रांग",
+    "procurement": "खरेदी",
+    "payments": "DBT पेमेंट्स",
+    "history": "इतिहास",
+    "notifications": "सूचना",
+    "profile": "प्रोफाइल",
+    "grievance": "तक्रार निवारण"
+  },
+  "Worker": {
+    "dashboard": "केंद्र व्यवस्थापक डॅशबोर्ड",
+    "queue": "टोकन रांग बोर्ड",
+    "farmers": "शेतकरी शोध",
+    "procurementForm": "खरेदी नोंद",
+    "history": "केंद्र इतिहास",
+    "profile": "कर्मचारी प्रोफाइल"
+  },
+  "Admin": {
+    "dashboard": "मुख्यालय ॲडमिन डॅशबोर्ड",
+    "farmers": "शेतकरी डिरेक्टरी",
+    "workers": "कर्मचारी व्यवस्थापन",
+    "centres": "खरेदी केंद्रे",
+    "bookings": "ग्लोबल बुकिंग",
+    "procurement": "खरेदी नोंदी",
+    "payments": "पेमेंट वितरण",
+    "grievances": "तक्रार पोर्टल",
+    "reports": "सिस्टम अहवाल",
+    "notifications": "प्रसारण सूचना",
+    "auditLogs": "ऑडिट ट्रेल लॉग"
+  }
+}

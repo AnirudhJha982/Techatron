@@ -1,0 +1,68 @@
+{
+  "Common": {
+    "appName": "ਕਿਸਾਨ ਪੋਰਟਲ",
+    "department": "ਖੇਤੀਬਾੜੀ ਖਰੀਦ ਵਿਭਾਗ",
+    "welcome": "ਕਿਸਾਨ ਪੋਰਟਲ 'ਤੇ ਜੀ ਆਇਆਂ ਨੂੰ",
+    "login": "ਲੌਗਇਨ",
+    "register": "ਰਜਿਸਟਰ ਕਰੋ",
+    "home": "ਹੋਮ",
+    "howItWorks": "ਇਹ ਕਿਵੇਂ ਕੰਮ ਕਰਦਾ ਹੈ",
+    "services": "ਸੇਵਾਵਾਂ",
+    "centres": "ਖਰੀਦ ਕੇਂਦਰ",
+    "help": "ਮਦਦ ਅਤੇ ਸਹਾਇਤਾ",
+    "dashboard": "ਡੈਸ਼ਬੋਰਡ",
+    "logout": "ਲੌਗਆਊਟ",
+    "language": "ਭਾਸ਼ਾ",
+    "demoNotice": "ਡੇਮੋ ਅਤੇ ਪ੍ਰੋਟੋਟਾਈਪ ਪਲੇਟਫਾਰਮ",
+    "demoSub": "ਖੇਤੀਬਾੜੀ ਅਤੇ ਕਿਸਾਨ ਭਲਾਈ ਵਿਭਾਗ, ਭਾਰਤ ਸਰਕਾਰ"
+  },
+  "Landing": {
+    "heroTitle": "ਪਾਰਦਰਸ਼ੀ, ਸਰਲ ਅਤੇ ਪਹੁੰਚਯੋਗ ਖੇਤੀਬਾੜੀ ਖਰੀਦ",
+    "heroSubtitle": "ਭਾਰਤੀ ਕਿਸਾਨਾਂ ਲਈ ਸਿੱਧਾ MSP ਖਰੀਦ ਪੋਰਟਲ। ਸਲਾਟ ਬੁੱਕ ਕਰੋ, ਲਾਈਵ ਟੋਕਨ ਟਰੈਕ ਕਰੋ ਅਤੇ ਸਿੱਧੇ ਬੈਂਕ ਖਾਤੇ ਵਿੱਚ ਭੁਗਤਾਨ ਪ੍ਰਾਪਤ ਕਰੋ।",
+    "bookSlot": "ਖਰੀਦ ਸਲਾਟ ਬੁੱਕ ਕਰੋ",
+    "findCentre": "ਨੇੜਲਾ ਕੇਂਦਰ ਲੱਭੋ",
+    "checkToken": "ਲਾਈਵ ਟੋਕਨ ਟਰੈਕ ਕਰੋ",
+    "checkStatus": "ਭੁਗਤਾਨ ਸਥਿਤੀ",
+    "servicesTitle": "ਸਿੱਧੀਆਂ ਕਿਸਾਨ ਸੇਵਾਵਾਂ",
+    "statisticsTitle": "ਰਾਸ਼ਟਰੀ ਖਰੀਦ ਅੰਕੜੇ",
+    "totalProcured": "ਖਰੀਦੇ ਗਏ ਕੁਇੰਟਲ",
+    "totalFarmers": "ਰਜਿਸਟਰਡ ਕਿਸਾਨ",
+    "totalDisbursed": "DBT ਰਾਹੀਂ ਜਾਰੀ",
+    "activeCentres": "ਸਰਗਰਮ ਕੇਂਦਰ",
+    "howItWorksTitle": "ਸਰਲ 4-ਚਰਣੀ ਖਰੀਦ ਪ੍ਰਕਿਰਿਆ",
+    "faqTitle": "ਅਕਸਰ ਪੁੱਛੇ ਜਾਂਦੇ ਸਵਾਲ",
+    "announcementsTitle": "ਸਰਕਾਰੀ ਐਲਾਨ"
+  },
+  "Farmer": {
+    "dashboard": "ਕਿਸਾਨ ਡੈਸ਼ਬੋਰਡ",
+    "slotBooking": "ਸਲਾਟ ਬੁੱਕ ਕਰੋ",
+    "liveQueue": "ਲਾਈਵ ਕਤਾਰ",
+    "procurement": "ਖਰੀਦ",
+    "payments": "DBT ਭੁਗਤਾਨ",
+    "history": "ਇਤਿਹਾਸ",
+    "notifications": "ਸੂਚਨਾਵਾਂ",
+    "profile": "ਪ੍ਰੋਫਾਈਲ",
+    "grievance": "ਸ਼ਿਕਾਇਤ ਨਿਵਾਰਨ"
+  },
+  "Worker": {
+    "dashboard": "ਮੰਡੀ ਸੁਪਰਵਾਈਜ਼ਰ ਡੈਸ਼ਬੋਰਡ",
+    "queue": "ਟੋਕਨ ਕਤਾਰ ਬੋਰਡ",
+    "farmers": "ਕਿਸਾਨ ਖੋਜ",
+    "procurementForm": "ਖਰੀਦ ਇੰਦਰਾਜ਼",
+    "history": "ਕੇਂਦਰ ਇਤਿਹਾਸ",
+    "profile": "ਸਟਾਫ਼ ਪ੍ਰੋਫਾਈਲ"
+  },
+  "Admin": {
+    "dashboard": "ਮੁੱਖ ਦਫ਼ਤਰ ਐਡਮਿਨ ਡੈਸ਼ਬੋਰਡ",
+    "farmers": "ਕਿਸਾਨ ਡਾਇਰੈਕਟਰੀ",
+    "workers": "ਸਟਾਫ਼ ਪ੍ਰਬੰਧਨ",
+    "centres": "ਖਰੀਦ ਕੇਂਦਰ",
+    "bookings": "ਗਲੋਬਲ ਬੁਕਿੰਗ",
+    "procurement": "ਖਰੀਦ ਰਿਕਾਰਡ",
+    "payments": "ਭੁਗਤਾਨ ਵੰਡ",
+    "grievances": "ਸ਼ਿਕਾਇਤ ਪੋਰਟਲ",
+    "reports": "ਸਿਸਟਮ ਰਿਪੋਰਟਾਂ",
+    "notifications": "ਬ੍ਰੌਡਕਾਸਟ ਅਲਰਟ",
+    "auditLogs": "ਆਡਿਟ ਲੌਗ"
+  }
+}

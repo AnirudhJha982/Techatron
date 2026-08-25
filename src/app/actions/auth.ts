@@ -11,8 +11,9 @@ export async function authenticate(
   formData: FormData,
 ) {
   try {
-    const phoneNumber = formData.get("phoneNumber") as string
+    const rawPhone = formData.get("phoneNumber") as string
     const password = formData.get("password") as string
+    const phoneNumber = rawPhone ? rawPhone.trim() : ""
 
     if (!phoneNumber || !password) {
       return 'Please enter phone number and password.'
@@ -54,12 +55,13 @@ export async function authenticate(
 
 export async function registerFarmer(formData: FormData) {
   const name = formData.get("name") as string
-  const phoneNumber = formData.get("phoneNumber") as string
+  const rawPhone = formData.get("phoneNumber") as string
   const password = formData.get("password") as string
   const village = formData.get("village") as string
   const district = formData.get("district") as string
   const state = formData.get("state") as string
   const landSizeAcres = parseFloat(formData.get("landSizeAcres") as string || "0")
+  const phoneNumber = rawPhone ? rawPhone.trim() : ""
 
   if (!name || !phoneNumber || !password) {
     return { error: "Name, phone number, and password are required." }

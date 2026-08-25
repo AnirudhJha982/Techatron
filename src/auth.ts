@@ -15,15 +15,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-        if (!credentials?.phoneNumber || !credentials?.password) {
+        const rawPhone = credentials?.phoneNumber as string
+        const password = credentials?.password as string
+        const phoneNumber = rawPhone ? rawPhone.trim() : ""
+
+        if (!phoneNumber || !password) {
           return null
         }
         await connectToDatabase()
-        const user = await User.findOne({ phoneNumber: credentials.phoneNumber as string })
+        const user = await User.findOne({ phoneNumber })
         if (!user) return null
         
         const passwordsMatch = await bcrypt.compare(
-          credentials.password as string,
+          password,
           user.passwordHash
         )
         if (passwordsMatch) {

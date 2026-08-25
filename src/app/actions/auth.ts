@@ -2,7 +2,8 @@
 
 import { signIn } from "@/auth"
 import { AuthError } from "next-auth"
-import { prisma } from "@/lib/prisma"
+import { connectToDatabase } from "@/lib/mongodb"
+import { User, FarmerProfile, Notification } from "@/models"
 import bcrypt from "bcryptjs"
 
 export async function authenticate(
@@ -17,9 +18,8 @@ export async function authenticate(
       return 'Please enter phone number and password.'
     }
 
-    const user = await prisma.user.findUnique({
-      where: { phoneNumber }
-    })
+    await connectToDatabase()
+    const user = await User.findOne({ phoneNumber })
 
     if (!user) {
       return 'Invalid credentials. User phone number not registered.'
@@ -65,43 +65,42 @@ export async function registerFarmer(formData: FormData) {
     return { error: "Name, phone number, and password are required." }
   }
 
-  // Check if user already exists
-  const existingUser = await prisma.user.findUnique({
-    where: { phoneNumber }
-  })
+  await connectToDatabase()
 
+  // Check if user already exists
+  const existingUser = await User.findOne({ phoneNumber })
   if (existingUser) {
     return { error: "An account with this phone number already exists." }
   }
 
   const passwordHash = await bcrypt.hash(password, 10)
 
-  // Create User + FarmerProfile
-  const user = await prisma.user.create({
-    data: {
-      name,
-      phoneNumber,
-      passwordHash,
-      role: "FARMER",
-      language: "en",
-      farmerProfile: {
-        create: {
-          village: village || "Not specified",
-          district: district || "Not specified",
-          state: state || "Not specified",
-          landSizeAcres: landSizeAcres || 1.0,
-          address: `${village}, ${district}, ${state}`
-        }
-      },
-      notifications: {
-        create: {
-          title: "Welcome to Kisan Portal",
-          message: "Your registration as a registered farmer is complete. You can now book procurement slots.",
-          category: "GENERAL"
-        }
-      }
-    }
+  // Create User
+  const user = await User.create({
+    name,
+    phoneNumber,
+    passwordHash,
+    role: "FARMER",
+    language: "en"
   })
 
-  return { success: true, user }
+  // Create FarmerProfile
+  await FarmerProfile.create({
+    userId: user._id,
+    village: village || "Not specified",
+    district: district || "Not specified",
+    state: state || "Not specified",
+    landSizeAcres: landSizeAcres || 1.0,
+    address: `${village}, ${district}, ${state}`
+  })
+
+  // Create Welcome Notification
+  await Notification.create({
+    userId: user._id,
+    title: "Welcome to Kisan Portal",
+    message: "Your registration as a registered farmer is complete. You can now book procurement slots.",
+    category: "GENERAL"
+  })
+
+  return { success: true, userId: user._id.toString() }
 }

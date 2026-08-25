@@ -1,5 +1,6 @@
 import { auth } from "@/auth"
-import { PrismaClient } from "@prisma/client"
+import { connectToDatabase } from "@/lib/mongodb"
+import { WorkerProfile, ProcurementCentre, Booking, FarmerProfile, User } from "@/models"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -7,32 +8,39 @@ import { Label } from "@/components/ui/label"
 import { submitProcurementAction } from "@/app/actions/workerActions"
 import Link from "next/link"
 
-const prisma = new PrismaClient()
-
 export default async function WorkerProcurementFormPage({ params, searchParams }: { params: Promise<{ locale: string }>, searchParams: Promise<{ bookingId?: string }> }) {
   const { locale } = await params
   const { bookingId } = await searchParams
   const session = await auth()
 
-  const workerProfile = await prisma.workerProfile.findUnique({
-    where: { userId: session?.user.id },
-    include: { centre: true }
-  })
+  await connectToDatabase()
+
+  const workerProfile = await WorkerProfile.findOne({ userId: session?.user.id })
+  const centre = workerProfile ? await ProcurementCentre.findById(workerProfile.centreId).lean() : null
 
   // Fetch active bookings for selection
-  const bookings = await prisma.booking.findMany({
-    where: {
-      centreId: workerProfile?.centreId,
-      status: { in: ['ARRIVED', 'PROCESSING', 'SCHEDULED'] }
-    },
-    include: {
-      farmer: { include: { user: true } }
-    }
-  })
+  let bookings: any[] = []
+  if (workerProfile) {
+    const rawBookings = await Booking.find({
+      centreId: workerProfile.centreId,
+      status: { $in: ['ARRIVED', 'PROCESSING', 'SCHEDULED'] }
+    }).lean()
 
-  const selectedBooking = bookingId
-    ? await prisma.booking.findUnique({ where: { id: bookingId }, include: { farmer: { include: { user: true } } } })
-    : bookings[0]
+    bookings = await Promise.all(
+      rawBookings.map(async (b) => {
+        const farmerProfile = await FarmerProfile.findById(b.farmerId).lean()
+        const farmerUser = farmerProfile ? await User.findById(farmerProfile.userId).lean() : null
+        return {
+          id: b._id.toString(),
+          tokenNumber: b.tokenNumber,
+          farmerName: farmerUser?.name || 'Farmer',
+          farmerPhone: farmerUser?.phoneNumber || 'N/A'
+        }
+      })
+    )
+  }
+
+  const selectedBooking = bookingId ? bookings.find(b => b.id === bookingId) || bookings[0] : bookings[0]
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
@@ -49,7 +57,7 @@ export default async function WorkerProcurementFormPage({ params, searchParams }
       <Card className="bg-white shadow-sm border-slate-200">
         <CardHeader className="border-b bg-slate-50/50">
           <CardTitle className="text-lg font-bold text-slate-900">Official Produce Receipt Form</CardTitle>
-          <CardDescription className="text-xs text-slate-500">{workerProfile?.centre.name}</CardDescription>
+          <CardDescription className="text-xs text-slate-500">{centre?.name || 'Mandi Centre'}</CardDescription>
         </CardHeader>
         <CardContent className="pt-6">
           <form action={async (formData) => {
@@ -67,7 +75,7 @@ export default async function WorkerProcurementFormPage({ params, searchParams }
               >
                 {bookings.map(b => (
                   <option key={b.id} value={b.id}>
-                    {b.tokenNumber} - {b.farmer.user.name} ({b.farmer.user.phoneNumber})
+                    {b.tokenNumber} - {b.farmerName} ({b.farmerPhone})
                   </option>
                 ))}
               </select>

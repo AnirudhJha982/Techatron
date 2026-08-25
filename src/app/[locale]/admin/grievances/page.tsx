@@ -1,15 +1,28 @@
-import { PrismaClient } from "@prisma/client"
+import { connectToDatabase } from "@/lib/mongodb"
+import { Grievance, User } from "@/models"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { respondGrievanceAction } from "@/app/actions/adminActions"
 
-const prisma = new PrismaClient()
-
 export default async function AdminGrievancesPage() {
-  const grievances = await prisma.grievance.findMany({
-    include: { user: true },
-    orderBy: { createdAt: 'desc' }
-  })
+  await connectToDatabase()
+
+  const rawGrievances = await Grievance.find({}).sort({ createdAt: -1 }).lean()
+
+  const grievances = await Promise.all(
+    rawGrievances.map(async (g) => {
+      const user = await User.findById(g.userId).lean()
+      return {
+        id: g._id.toString(),
+        category: g.category,
+        description: g.description,
+        status: g.status,
+        response: g.response,
+        userName: user?.name || 'Farmer',
+        userPhone: user?.phoneNumber || 'N/A'
+      }
+    })
+  )
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
@@ -31,7 +44,7 @@ export default async function AdminGrievancesPage() {
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
                   <div>
                     <span className="bg-yellow-400 text-green-950 text-xs font-black px-2.5 py-0.5 rounded">{g.category}</span>
-                    <h3 className="font-bold text-slate-900 text-sm mt-1">Farmer: {g.user.name} ({g.user.phoneNumber})</h3>
+                    <h3 className="font-bold text-slate-900 text-sm mt-1">Farmer: {g.userName} ({g.userPhone})</h3>
                   </div>
                   <span className={`px-2.5 py-0.5 rounded-full font-bold text-[10px] mt-2 sm:mt-0 ${
                     g.status === 'RESOLVED' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'

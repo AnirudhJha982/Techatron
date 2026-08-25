@@ -1,18 +1,26 @@
-import { PrismaClient } from "@prisma/client"
+import { connectToDatabase } from "@/lib/mongodb"
+import { User, WorkerProfile, ProcurementCentre } from "@/models"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
-const prisma = new PrismaClient()
-
 export default async function AdminWorkersPage() {
-  const workers = await prisma.user.findMany({
-    where: { role: 'WORKER' },
-    include: {
-      workerProfile: {
-        include: { centre: true }
+  await connectToDatabase()
+
+  const rawWorkers = await User.find({ role: 'WORKER' }).sort({ createdAt: -1 }).lean()
+
+  const workers = await Promise.all(
+    rawWorkers.map(async (w) => {
+      const profile = await WorkerProfile.findOne({ userId: w._id }).lean()
+      const centre = profile ? await ProcurementCentre.findById(profile.centreId).lean() : null
+      return {
+        id: w._id.toString(),
+        name: w.name,
+        phoneNumber: w.phoneNumber,
+        centreName: centre?.name || 'Mandi Samiti',
+        district: centre?.district || 'Karnal',
+        state: centre?.state || 'Haryana'
       }
-    },
-    orderBy: { createdAt: 'desc' }
-  })
+    })
+  )
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
@@ -42,8 +50,8 @@ export default async function AdminWorkersPage() {
                   <tr key={w.id} className="hover:bg-slate-50">
                     <td className="p-3 font-bold text-slate-900">{w.name}</td>
                     <td className="p-3 font-mono text-slate-600">{w.phoneNumber}</td>
-                    <td className="p-3 font-bold text-amber-900">{w.workerProfile?.centre.name}</td>
-                    <td className="p-3">{w.workerProfile?.centre.district}, {w.workerProfile?.centre.state}</td>
+                    <td className="p-3 font-bold text-amber-900">{w.centreName}</td>
+                    <td className="p-3">{w.district}, {w.state}</td>
                     <td className="p-3">
                       <span className="bg-green-100 text-green-800 text-[10px] font-bold px-2 py-0.5 rounded-full">
                         ● On Duty

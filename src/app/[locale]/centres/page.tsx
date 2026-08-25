@@ -1,7 +1,8 @@
 import PublicHeader from "@/components/PublicHeader";
 import PublicFooter from "@/components/PublicFooter";
 import { auth } from "@/auth";
-import { prisma } from "@/lib/prisma";
+import { connectToDatabase } from "@/lib/mongodb";
+import { ProcurementCentre, Booking, WorkerProfile } from "@/models";
 import { Button } from "@/components/ui/button";
 import { translateCentre, translateState } from "@/lib/translateEntity";
 import Link from "next/link";
@@ -11,30 +12,40 @@ export default async function CentresPage({ params, searchParams }: { params: Pr
   const { query, state } = await searchParams;
   const session = await auth();
 
-  // Fetch centres from DB with optional filtering
-  const whereClause: any = { isActive: true };
+  await connectToDatabase();
+
+  const filter: any = { isActive: true };
   if (query) {
-    whereClause.OR = [
-      { name: { contains: query } },
-      { district: { contains: query } },
-      { address: { contains: query } }
+    filter.$or = [
+      { name: { $regex: query, $options: 'i' } },
+      { district: { $regex: query, $options: 'i' } },
+      { address: { $regex: query, $options: 'i' } }
     ];
   }
   if (state) {
-    whereClause.state = state;
+    filter.state = state;
   }
 
-  const centres = await prisma.procurementCentre.findMany({
-    where: whereClause,
-    include: {
-      _count: {
-        select: { bookings: true, workers: true }
-      }
-    },
-    orderBy: { state: 'asc' }
-  });
+  const rawCentres = await ProcurementCentre.find(filter).sort({ state: 1 }).lean();
 
-  const states = ["Haryana", "Maharashtra", "Punjab", "Andhra Pradesh", "Madhya Pradesh"];
+  const centres = await Promise.all(
+    rawCentres.map(async (c) => {
+      const bookingsCount = await Booking.countDocuments({ centreId: c._id });
+      const workersCount = await WorkerProfile.countDocuments({ centreId: c._id });
+      return {
+        id: c._id.toString(),
+        name: c.name,
+        state: c.state,
+        district: c.district,
+        address: c.address,
+        capacityPerDay: c.capacityPerDay,
+        bookingsCount,
+        workersCount
+      };
+    })
+  );
+
+  const states = ["Haryana", "Maharashtra", "Punjab", "Rajasthan", "Uttar Pradesh"];
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
@@ -115,11 +126,11 @@ export default async function CentresPage({ params, searchParams }: { params: Pr
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-500">Staff On Duty:</span>
-                      <strong className="text-gray-900">{c._count.workers} Supervisors</strong>
+                      <strong className="text-gray-900">{c.workersCount} Supervisors</strong>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-500">Total Bookings:</span>
-                      <strong className="text-green-700">{c._count.bookings} Farmers</strong>
+                      <strong className="text-green-700">{c.bookingsCount} Farmers</strong>
                     </div>
                   </div>
                 </div>

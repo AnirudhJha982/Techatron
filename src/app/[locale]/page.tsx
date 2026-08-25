@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import PublicHeader from "@/components/PublicHeader";
 import PublicFooter from "@/components/PublicFooter";
 import { auth } from "@/auth";
-import { prisma } from "@/lib/prisma";
+import { connectToDatabase } from "@/lib/mongodb";
+import { User, ProcurementCentre, Booking } from "@/models";
 import { translateCentre, translateState } from "@/lib/translateEntity";
 
 export default async function LandingPage({ params }: { params: Promise<{ locale: string }> }) {
@@ -12,16 +13,21 @@ export default async function LandingPage({ params }: { params: Promise<{ locale
   const session = await auth();
 
   const t = await getTranslations({ locale, namespace: 'Landing' });
-  const tCommon = await getTranslations({ locale, namespace: 'Common' });
 
-  // Fetch real statistics from database
-  const totalFarmers = await prisma.user.count({ where: { role: 'FARMER' } });
-  const totalCentres = await prisma.procurementCentre.count({ where: { isActive: true } });
-  const totalBookings = await prisma.booking.count();
-  const recentCentres = await prisma.procurementCentre.findMany({
-    take: 3,
-    where: { isActive: true }
-  });
+  // Fetch real statistics from MongoDB
+  await connectToDatabase();
+  const totalFarmers = await User.countDocuments({ role: 'FARMER' });
+  const totalCentres = await ProcurementCentre.countDocuments({ isActive: true });
+  const totalBookings = await Booking.countDocuments({});
+  const rawRecentCentres = await ProcurementCentre.find({ isActive: true }).limit(3).lean();
+  const recentCentres = rawRecentCentres.map(c => ({
+    id: c._id.toString(),
+    name: c.name,
+    state: c.state,
+    district: c.district,
+    address: c.address,
+    capacityPerDay: c.capacityPerDay
+  }));
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-50">

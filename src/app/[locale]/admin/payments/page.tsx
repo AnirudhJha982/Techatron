@@ -1,21 +1,28 @@
-import { PrismaClient } from "@prisma/client"
+import { connectToDatabase } from "@/lib/mongodb"
+import { Procurement, Booking, FarmerProfile, User } from "@/models"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 
-const prisma = new PrismaClient()
-
 export default async function AdminPaymentsPage() {
-  const procurements = await prisma.procurement.findMany({
-    include: {
-      booking: {
-        include: {
-          farmer: { include: { user: true } },
-          centre: true
-        }
+  await connectToDatabase()
+
+  const rawProcurements = await Procurement.find({}).sort({ createdAt: -1 }).lean()
+
+  const procurements = await Promise.all(
+    rawProcurements.map(async (p) => {
+      const booking = await Booking.findById(p.bookingId).lean()
+      const farmerProfile = booking ? await FarmerProfile.findById(booking.farmerId).lean() : null
+      const farmerUser = farmerProfile ? await User.findById(farmerProfile.userId).lean() : null
+
+      return {
+        id: p._id.toString(),
+        quantity: p.quantity,
+        paymentStatus: p.paymentStatus,
+        tokenNumber: booking?.tokenNumber || 'TKN-0000',
+        farmerName: farmerUser?.name || 'Farmer'
       }
-    },
-    orderBy: { createdAt: 'desc' }
-  })
+    })
+  )
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
@@ -47,8 +54,8 @@ export default async function AdminPaymentsPage() {
                   const val = Math.round(p.quantity * 2275)
                   return (
                     <tr key={p.id} className="hover:bg-slate-50">
-                      <td className="p-3 font-bold text-slate-900">{p.booking.tokenNumber}</td>
-                      <td className="p-3 font-bold text-slate-800">{p.booking.farmer.user.name}</td>
+                      <td className="p-3 font-bold text-slate-900">{p.tokenNumber}</td>
+                      <td className="p-3 font-bold text-slate-800">{p.farmerName}</td>
                       <td className="p-3 text-slate-600 font-mono">State Bank of India (XXXX4321)</td>
                       <td className="p-3 font-bold text-slate-900">{p.quantity} Qtl</td>
                       <td className="p-3 font-black text-green-800">₹ {val.toLocaleString('en-IN')}</td>

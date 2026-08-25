@@ -1,45 +1,60 @@
 import { auth } from "@/auth"
-import { PrismaClient } from "@prisma/client"
+import { connectToDatabase } from "@/lib/mongodb"
+import { FarmerProfile, Booking, ProcurementCentre, User } from "@/models"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-
-const prisma = new PrismaClient()
 
 export default async function FarmerQueuePage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params
   const session = await auth()
 
-  const farmerProfile = await prisma.farmerProfile.findUnique({
-    where: { userId: session?.user.id }
-  })
+  await connectToDatabase()
 
-  const activeBooking = await prisma.booking.findFirst({
-    where: {
-      farmerId: farmerProfile?.id,
-      status: { in: ['SCHEDULED', 'ARRIVED', 'PROCESSING'] }
-    },
-    include: {
-      centre: true,
-      slot: true
+  const farmerProfile = await FarmerProfile.findOne({ userId: session?.user.id })
+
+  let activeBookingData: any = null
+  let queueList: any[] = []
+
+  if (farmerProfile) {
+    const rawBooking = await Booking.findOne({
+      farmerId: farmerProfile._id,
+      status: { $in: ['SCHEDULED', 'ARRIVED', 'PROCESSING'] }
+    }).sort({ date: 1 }).lean()
+
+    if (rawBooking) {
+      const centre = await ProcurementCentre.findById(rawBooking.centreId).lean()
+      activeBookingData = {
+        id: rawBooking._id.toString(),
+        tokenNumber: rawBooking.tokenNumber,
+        status: rawBooking.status,
+        queuePosition: rawBooking.queuePosition,
+        centreName: centre?.name || 'Mandi Samiti'
+      }
+
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+
+      const rawQueue = await Booking.find({
+        centreId: rawBooking.centreId,
+        date: { $gte: today },
+        status: { $in: ['SCHEDULED', 'ARRIVED', 'PROCESSING'] }
+      }).sort({ tokenNumber: 1 }).lean()
+
+      queueList = await Promise.all(
+        rawQueue.map(async (item) => {
+          const fProfile = await FarmerProfile.findById(item.farmerId).lean()
+          const fUser = fProfile ? await User.findById(fProfile.userId).lean() : null
+          return {
+            id: item._id.toString(),
+            tokenNumber: item.tokenNumber,
+            status: item.status,
+            farmerName: fUser?.name || 'Farmer'
+          }
+        })
+      )
     }
-  })
-
-  // Fetch all bookings for the same centre today to show the live queue
-  const today = new Date()
-  today.setHours(0,0,0,0)
-
-  const queueList = activeBooking ? await prisma.booking.findMany({
-    where: {
-      centreId: activeBooking.centreId,
-      date: { gte: today },
-      status: { in: ['SCHEDULED', 'ARRIVED', 'PROCESSING'] }
-    },
-    include: {
-      farmer: { include: { user: true } }
-    },
-    orderBy: { tokenNumber: 'asc' }
-  }) : []
+  }
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -53,18 +68,18 @@ export default async function FarmerQueuePage({ params }: { params: Promise<{ lo
         </Link>
       </div>
 
-      {activeBooking ? (
+      {activeBookingData ? (
         <div className="space-y-6">
           {/* Active Queue Summary Banner */}
           <div className="bg-gradient-to-r from-yellow-500 to-amber-500 text-green-950 p-6 rounded-2xl shadow-md border-2 border-yellow-300 flex flex-col sm:flex-row justify-between items-center">
             <div>
               <span className="bg-green-950 text-yellow-400 text-xs font-black px-2.5 py-0.5 rounded uppercase">Your Active Booking</span>
-              <h2 className="text-3xl font-black tracking-tight mt-1">{activeBooking.tokenNumber}</h2>
-              <p className="text-xs font-semibold text-green-950 mt-0.5">Centre: {activeBooking.centre.name}</p>
+              <h2 className="text-3xl font-black tracking-tight mt-1">{activeBookingData.tokenNumber}</h2>
+              <p className="text-xs font-semibold text-green-950 mt-0.5">Centre: {activeBookingData.centreName}</p>
             </div>
             <div className="mt-4 sm:mt-0 text-center sm:text-right bg-green-950 text-white p-4 rounded-xl shadow-inner">
               <p className="text-xs text-green-200">Current Position in Queue</p>
-              <p className="text-3xl font-black text-yellow-400">#{activeBooking.queuePosition || 3}</p>
+              <p className="text-3xl font-black text-yellow-400">#{activeBookingData.queuePosition || 1}</p>
               <p className="text-[10px] text-green-300 mt-0.5">Est. Wait: ~25 Minutes</p>
             </div>
           </div>
@@ -80,8 +95,8 @@ export default async function FarmerQueuePage({ params }: { params: Promise<{ lo
                 {queueList.length === 0 ? (
                   <p className="col-span-full text-center text-sm text-slate-500 py-6">No queue tokens active right now.</p>
                 ) : (
-                  queueList.map((item, i) => {
-                    const isYou = item.id === activeBooking.id
+                  queueList.map((item) => {
+                    const isYou = item.id === activeBookingData.id
                     return (
                       <div
                         key={item.id}
@@ -104,7 +119,7 @@ export default async function FarmerQueuePage({ params }: { params: Promise<{ lo
                         </p>
 
                         <p className="text-xs text-slate-500 font-medium mt-1 truncate">
-                          {item.farmer.user.name}
+                          {item.farmerName}
                         </p>
                       </div>
                     )

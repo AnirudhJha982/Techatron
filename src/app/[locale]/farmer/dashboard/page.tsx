@@ -2,50 +2,66 @@ import { auth } from "@/auth"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { PrismaClient } from "@prisma/client"
-
-const prisma = new PrismaClient()
+import { connectToDatabase } from "@/lib/mongodb"
+import { FarmerProfile, Booking, Procurement, Notification, ProcurementCentre, Slot } from "@/models"
 
 export default async function FarmerDashboard({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params
   const session = await auth()
 
-  const farmerProfile = await prisma.farmerProfile.findUnique({
-    where: { userId: session?.user.id }
-  })
+  await connectToDatabase()
+
+  const farmerProfile = await FarmerProfile.findOne({ userId: session?.user.id })
 
   // Active Booking
-  const activeBooking = await prisma.booking.findFirst({
-    where: {
-      farmerId: farmerProfile?.id,
-      status: { in: ['SCHEDULED', 'ARRIVED', 'PROCESSING'] }
-    },
-    include: {
-      centre: true,
-      slot: true,
-      procurement: true
-    },
-    orderBy: { date: 'asc' }
-  })
+  let activeBookingData: any = null
+  if (farmerProfile) {
+    const rawBooking = await Booking.findOne({
+      farmerId: farmerProfile._id,
+      status: { $in: ['SCHEDULED', 'ARRIVED', 'PROCESSING'] }
+    }).sort({ date: 1 }).lean()
+
+    if (rawBooking) {
+      const centre = await ProcurementCentre.findById(rawBooking.centreId).lean()
+      const slot = await Slot.findById(rawBooking.slotId).lean()
+      activeBookingData = {
+        id: rawBooking._id.toString(),
+        tokenNumber: rawBooking.tokenNumber,
+        status: rawBooking.status,
+        queuePosition: rawBooking.queuePosition,
+        date: rawBooking.date,
+        centreName: centre?.name || 'Mandi Samiti',
+        timeSlot: slot?.timeSlot || 'Morning'
+      }
+    }
+  }
 
   // Completed Procurements Total
-  const procurements = await prisma.procurement.findMany({
-    where: {
-      booking: { farmerId: farmerProfile?.id }
-    }
-  })
+  let totalQuantity = 0
+  let totalReceived = 0
+  if (farmerProfile) {
+    const farmerBookings = await Booking.find({ farmerId: farmerProfile._id }).lean()
+    const bookingIds = farmerBookings.map(b => b._id)
+    const procurements = await Procurement.find({ bookingId: { $in: bookingIds } }).lean()
 
-  const totalQuantity = procurements.reduce((acc, p) => acc + p.quantity, 0)
-  const totalReceived = procurements
-    .filter(p => p.paymentStatus === 'COMPLETED')
-    .reduce((acc, p) => acc + Math.round(p.quantity * 2275), 0)
+    totalQuantity = procurements.reduce((acc, p) => acc + p.quantity, 0)
+    totalReceived = procurements
+      .filter(p => p.paymentStatus === 'COMPLETED')
+      .reduce((acc, p) => acc + Math.round(p.quantity * 2275), 0)
+  }
 
   // Recent Notifications
-  const notifications = await prisma.notification.findMany({
-    take: 3,
-    where: { userId: session?.user.id },
-    orderBy: { createdAt: 'desc' }
-  })
+  const rawNotifications = await Notification.find({ userId: session?.user.id })
+    .sort({ createdAt: -1 })
+    .limit(3)
+    .lean()
+
+  const notifications = rawNotifications.map(n => ({
+    id: n._id.toString(),
+    title: n.title,
+    message: n.message,
+    createdAt: n.createdAt
+  }))
 
   return (
     <div className="space-y-8">
@@ -70,8 +86,8 @@ export default async function FarmerDashboard({ params }: { params: Promise<{ lo
             <CardTitle className="text-xs font-bold uppercase text-slate-500 tracking-wider">Active Token</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-black text-slate-900">{activeBooking ? activeBooking.tokenNumber : "None"}</p>
-            <p className="text-xs text-slate-500 mt-1 font-medium">{activeBooking ? activeBooking.status : "No upcoming slots"}</p>
+            <p className="text-3xl font-black text-slate-900">{activeBookingData ? activeBookingData.tokenNumber : "None"}</p>
+            <p className="text-xs text-slate-500 mt-1 font-medium">{activeBookingData ? activeBookingData.status : "No upcoming slots"}</p>
           </CardContent>
         </Card>
 
@@ -100,8 +116,8 @@ export default async function FarmerDashboard({ params }: { params: Promise<{ lo
             <CardTitle className="text-xs font-bold uppercase text-slate-500 tracking-wider">Live Queue Position</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-black text-purple-900">{activeBooking?.queuePosition ? `#${activeBooking.queuePosition}` : "--"}</p>
-            <p className="text-xs text-slate-500 mt-1 font-medium">{activeBooking ? "Est. wait ~30 mins" : "No queue active"}</p>
+            <p className="text-3xl font-black text-purple-900">{activeBookingData?.queuePosition ? `#${activeBookingData.queuePosition}` : "--"}</p>
+            <p className="text-xs text-slate-500 mt-1 font-medium">{activeBookingData ? "Est. wait ~30 mins" : "No queue active"}</p>
           </CardContent>
         </Card>
       </div>
@@ -116,7 +132,7 @@ export default async function FarmerDashboard({ params }: { params: Promise<{ lo
                 <CardTitle className="text-xl font-extrabold text-slate-900">Current Booking Status</CardTitle>
                 <CardDescription className="text-xs text-slate-500 mt-0.5">Your upcoming or in-progress Mandi slot</CardDescription>
               </div>
-              {activeBooking && (
+              {activeBookingData && (
                 <Link href={`/${locale}/farmer/token`}>
                   <Button size="sm" variant="outline" className="text-green-800 border-green-300 font-bold text-xs">
                     View Digital Pass →
@@ -126,21 +142,21 @@ export default async function FarmerDashboard({ params }: { params: Promise<{ lo
             </div>
           </CardHeader>
           <CardContent className="pt-6">
-            {activeBooking ? (
+            {activeBookingData ? (
               <div className="space-y-6">
                 {/* Digital Token Display */}
                 <div className="bg-gradient-to-r from-green-900 to-green-800 text-white rounded-xl p-6 shadow-md border-2 border-yellow-400 relative overflow-hidden">
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
                     <div>
                       <span className="text-[10px] bg-yellow-400 text-green-950 font-black px-2 py-0.5 rounded uppercase">Official Token</span>
-                      <h3 className="text-4xl font-black tracking-tight text-white mt-1">{activeBooking.tokenNumber}</h3>
-                      <p className="text-xs text-green-200 mt-1">Centre: <strong>{activeBooking.centre.name}</strong></p>
+                      <h3 className="text-4xl font-black tracking-tight text-white mt-1">{activeBookingData.tokenNumber}</h3>
+                      <p className="text-xs text-green-200 mt-1">Centre: <strong>{activeBookingData.centreName}</strong></p>
                     </div>
                     <div className="mt-4 sm:mt-0 text-left sm:text-right bg-green-950/60 p-3 rounded-lg border border-green-700">
-                      <p className="text-xs text-green-200">Date: <strong className="text-white">{activeBooking.date.toLocaleDateString()}</strong></p>
-                      <p className="text-xs text-green-200">Slot: <strong className="text-white">{activeBooking.slot.timeSlot}</strong></p>
+                      <p className="text-xs text-green-200">Date: <strong className="text-white">{new Date(activeBookingData.date).toLocaleDateString()}</strong></p>
+                      <p className="text-xs text-green-200">Slot: <strong className="text-white">{activeBookingData.timeSlot}</strong></p>
                       <span className="inline-block mt-2 px-2.5 py-0.5 bg-yellow-400 text-green-950 text-xs font-black rounded-full">
-                        Status: {activeBooking.status}
+                        Status: {activeBookingData.status}
                       </span>
                     </div>
                   </div>
@@ -150,7 +166,7 @@ export default async function FarmerDashboard({ params }: { params: Promise<{ lo
                 <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
                   <div className="flex justify-between text-xs font-bold text-slate-700 mb-2">
                     <span>Queue Progress</span>
-                    <span>Position #{activeBooking.queuePosition || 1} in queue</span>
+                    <span>Position #{activeBookingData.queuePosition || 1} in queue</span>
                   </div>
                   <div className="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
                     <div className="bg-gradient-to-r from-yellow-400 to-green-600 h-full rounded-full w-3/4"></div>
@@ -192,7 +208,7 @@ export default async function FarmerDashboard({ params }: { params: Promise<{ lo
                   <div key={n.id} className="p-3 rounded-lg bg-slate-50 border border-slate-200 text-xs">
                     <p className="font-bold text-slate-800 mb-0.5">{n.title}</p>
                     <p className="text-slate-600 leading-snug">{n.message}</p>
-                    <span className="text-[10px] text-slate-400 mt-1.5 block">{n.createdAt.toLocaleTimeString()}</span>
+                    <span className="text-[10px] text-slate-400 mt-1.5 block">{new Date(n.createdAt).toLocaleTimeString()}</span>
                   </div>
                 ))
               )}

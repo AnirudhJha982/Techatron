@@ -1,21 +1,32 @@
-import { PrismaClient } from "@prisma/client"
+import { connectToDatabase } from "@/lib/mongodb"
+import { ProcurementCentre, Booking, WorkerProfile } from "@/models"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { createCentreAction, updateCentreStatusAction } from "@/app/actions/adminActions"
 
-const prisma = new PrismaClient()
-
 export default async function AdminCentresPage() {
-  const centres = await prisma.procurementCentre.findMany({
-    include: {
-      _count: {
-        select: { bookings: true, workers: true }
+  await connectToDatabase()
+
+  const rawCentres = await ProcurementCentre.find({}).sort({ createdAt: -1 }).lean()
+
+  const centres = await Promise.all(
+    rawCentres.map(async (c) => {
+      const bookingsCount = await Booking.countDocuments({ centreId: c._id })
+      const workersCount = await WorkerProfile.countDocuments({ centreId: c._id })
+      return {
+        id: c._id.toString(),
+        name: c.name,
+        district: c.district,
+        state: c.state,
+        capacityPerDay: c.capacityPerDay,
+        isActive: c.isActive,
+        bookingsCount,
+        workersCount
       }
-    },
-    orderBy: { createdAt: 'desc' }
-  })
+    })
+  )
 
   return (
     <div className="space-y-8 max-w-6xl mx-auto">
@@ -90,7 +101,7 @@ export default async function AdminCentresPage() {
                       <td className="p-3 font-bold text-slate-900">{c.name}</td>
                       <td className="p-3">{c.district}, {c.state}</td>
                       <td className="p-3 font-black text-slate-900">{c.capacityPerDay} Qtl</td>
-                      <td className="p-3 text-slate-600">{c._count.workers} Staff • {c._count.bookings} Slots</td>
+                      <td className="p-3 text-slate-600">{c.workersCount} Staff • {c.bookingsCount} Slots</td>
                       <td className="p-3">
                         <span className={`px-2 py-0.5 rounded-full font-bold text-[10px] ${
                           c.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'

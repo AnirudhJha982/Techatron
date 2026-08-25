@@ -2,7 +2,8 @@ import { auth, signOut } from "@/auth"
 import { redirect } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { prisma } from "@/lib/prisma"
+import { connectToDatabase } from "@/lib/mongodb"
+import { WorkerProfile, ProcurementCentre } from "@/models"
 import LanguageSwitcher from "@/components/LanguageSwitcher"
 import { getTranslations } from 'next-intl/server'
 
@@ -24,10 +25,9 @@ export default async function WorkerLayout({
   const tWorker = await getTranslations({ locale, namespace: 'Worker' })
   const tCommon = await getTranslations({ locale, namespace: 'Common' })
 
-  const workerProfile = await prisma.workerProfile.findUnique({
-    where: { userId: session.user.id },
-    include: { centre: true }
-  })
+  await connectToDatabase()
+  const workerProfile = await WorkerProfile.findOne({ userId: session.user.id })
+  const centre = workerProfile ? await ProcurementCentre.findById(workerProfile.centreId).lean() : null
 
   const navItems = [
     { label: tWorker('dashboard'), href: `/${locale}/worker/dashboard`, icon: "📊" },
@@ -50,7 +50,7 @@ export default async function WorkerLayout({
               </div>
               <div>
                 <h1 className="text-lg font-black tracking-tight text-white leading-tight">{tWorker('portalName')}</h1>
-                <p className="text-[10px] text-amber-100 font-semibold">{workerProfile?.centre?.name || 'Procurement Centre'}</p>
+                <p className="text-[10px] text-amber-100 font-semibold">{centre?.name || 'Procurement Centre'}</p>
               </div>
             </Link>
           </div>

@@ -2,7 +2,8 @@ import { auth, signOut } from "@/auth"
 import { redirect } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { prisma } from "@/lib/prisma"
+import { connectToDatabase } from "@/lib/mongodb"
+import { Notification } from "@/models"
 import LanguageSwitcher from "@/components/LanguageSwitcher"
 import { getTranslations } from 'next-intl/server'
 
@@ -24,10 +25,9 @@ export default async function FarmerLayout({
   const tFarmer = await getTranslations({ locale, namespace: 'Farmer' })
   const tCommon = await getTranslations({ locale, namespace: 'Common' })
 
-  // Unread notifications count
-  const unreadCount = await prisma.notification.count({
-    where: { userId: session.user.id, isRead: false }
-  })
+  // Unread notifications count from MongoDB
+  await connectToDatabase()
+  const unreadCount = await Notification.countDocuments({ userId: session.user.id, isRead: false })
 
   const navItems = [
     { label: tFarmer('dashboard'), href: `/${locale}/farmer/dashboard`, icon: "📊" },

@@ -1,35 +1,46 @@
-import { PrismaClient } from "@prisma/client"
+import { connectToDatabase } from "@/lib/mongodb"
+import { User, ProcurementCentre, Booking, Grievance, Procurement, FarmerProfile } from "@/models"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 
-const prisma = new PrismaClient()
-
 export default async function AdminDashboardPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params
 
-  const farmersCount = await prisma.user.count({ where: { role: 'FARMER' } })
-  const workersCount = await prisma.user.count({ where: { role: 'WORKER' } })
-  const centresCount = await prisma.procurementCentre.count({ where: { isActive: true } })
-  const bookingsCount = await prisma.booking.count()
-  const grievancesCount = await prisma.grievance.count({ where: { status: { in: ['SUBMITTED', 'UNDER_REVIEW'] } } })
+  await connectToDatabase()
 
-  const procurements = await prisma.procurement.findMany()
+  const farmersCount = await User.countDocuments({ role: 'FARMER' })
+  const workersCount = await User.countDocuments({ role: 'WORKER' })
+  const centresCount = await ProcurementCentre.countDocuments({ isActive: true })
+  const bookingsCount = await Booking.countDocuments({})
+  const grievancesCount = await Grievance.countDocuments({ status: { $in: ['SUBMITTED', 'UNDER_REVIEW'] } })
+
+  const procurements = await Procurement.find({}).lean()
   const totalProcuredQuintals = procurements.reduce((acc, p) => acc + p.quantity, 0)
   const totalDisbursedValue = procurements.reduce((acc, p) => acc + Math.round(p.quantity * 2275), 0)
 
-  const recentProcurements = await prisma.procurement.findMany({
-    take: 5,
-    include: {
-      booking: {
-        include: {
-          farmer: { include: { user: true } },
-          centre: true
-        }
+  const rawRecentProcurements = await Procurement.find({})
+    .sort({ createdAt: -1 })
+    .limit(5)
+    .lean()
+
+  const recentProcurements = await Promise.all(
+    rawRecentProcurements.map(async (p) => {
+      const booking = await Booking.findById(p.bookingId).lean()
+      const farmerProfile = booking ? await FarmerProfile.findById(booking.farmerId).lean() : null
+      const farmerUser = farmerProfile ? await User.findById(farmerProfile.userId).lean() : null
+      const centre = booking ? await ProcurementCentre.findById(booking.centreId).lean() : null
+
+      return {
+        id: p._id.toString(),
+        crop: p.crop,
+        quantity: p.quantity,
+        farmerName: farmerUser?.name || 'Farmer',
+        centreName: centre?.name || 'Mandi Samiti',
+        centreDistrict: centre?.district || 'Karnal'
       }
-    },
-    orderBy: { createdAt: 'desc' }
-  })
+    })
+  )
 
   return (
     <div className="space-y-8">
@@ -131,8 +142,8 @@ export default async function AdminDashboardPage({ params }: { params: Promise<{
                     const amount = Math.round(p.quantity * 2275)
                     return (
                       <tr key={p.id} className="hover:bg-slate-50">
-                        <td className="p-3 font-bold text-slate-900">{p.booking.farmer.user.name}</td>
-                        <td className="p-3">{p.booking.centre.name} ({p.booking.centre.district})</td>
+                        <td className="p-3 font-bold text-slate-900">{p.farmerName}</td>
+                        <td className="p-3">{p.centreName} ({p.centreDistrict})</td>
                         <td className="p-3 font-semibold">{p.crop}</td>
                         <td className="p-3 font-black text-slate-900">{p.quantity} Qtl</td>
                         <td className="p-3 font-black text-green-800">₹ {amount.toLocaleString('en-IN')}</td>

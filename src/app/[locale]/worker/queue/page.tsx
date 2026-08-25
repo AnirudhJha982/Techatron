@@ -1,34 +1,43 @@
 import { auth } from "@/auth"
-import { PrismaClient } from "@prisma/client"
+import { connectToDatabase } from "@/lib/mongodb"
+import { WorkerProfile, Booking, FarmerProfile, User } from "@/models"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { updateQueueStatusAction } from "@/app/actions/workerActions"
 import Link from "next/link"
 
-const prisma = new PrismaClient()
-
 export default async function WorkerQueuePage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params
   const session = await auth()
 
-  const workerProfile = await prisma.workerProfile.findUnique({
-    where: { userId: session?.user.id },
-    include: { centre: true }
-  })
+  await connectToDatabase()
+
+  const workerProfile = await WorkerProfile.findOne({ userId: session?.user.id })
 
   const today = new Date()
   today.setHours(0,0,0,0)
 
-  const queueBookings = await prisma.booking.findMany({
-    where: {
-      centreId: workerProfile?.centreId,
-      date: { gte: today }
-    },
-    include: {
-      farmer: { include: { user: true } }
-    },
-    orderBy: { tokenNumber: 'asc' }
-  })
+  let queueBookings: any[] = []
+  if (workerProfile) {
+    const rawQueue = await Booking.find({
+      centreId: workerProfile.centreId,
+      date: { $gte: today }
+    }).sort({ tokenNumber: 1 }).lean()
+
+    queueBookings = await Promise.all(
+      rawQueue.map(async (b) => {
+        const farmerProfile = await FarmerProfile.findById(b.farmerId).lean()
+        const farmerUser = farmerProfile ? await User.findById(farmerProfile.userId).lean() : null
+        return {
+          id: b._id.toString(),
+          tokenNumber: b.tokenNumber,
+          status: b.status,
+          farmerName: farmerUser?.name || 'Farmer',
+          farmerPhone: farmerUser?.phoneNumber || 'N/A'
+        }
+      })
+    )
+  }
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
@@ -66,8 +75,8 @@ export default async function WorkerQueuePage({ params }: { params: Promise<{ lo
                   {queueBookings.map((b) => (
                     <tr key={b.id} className="hover:bg-slate-50">
                       <td className="p-3 font-black text-base text-slate-900">{b.tokenNumber}</td>
-                      <td className="p-3 font-bold text-slate-800">{b.farmer.user.name}</td>
-                      <td className="p-3 text-slate-600">{b.farmer.user.phoneNumber}</td>
+                      <td className="p-3 font-bold text-slate-800">{b.farmerName}</td>
+                      <td className="p-3 text-slate-600">{b.farmerPhone}</td>
                       <td className="p-3">
                         <span className={`px-2.5 py-0.5 rounded-full font-bold text-[10px] ${
                           b.status === 'COMPLETED' ? 'bg-green-100 text-green-800' :

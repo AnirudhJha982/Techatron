@@ -1,35 +1,47 @@
 import { auth } from "@/auth"
-import { PrismaClient } from "@prisma/client"
+import { connectToDatabase } from "@/lib/mongodb"
+import { FarmerProfile, Booking, Procurement, ProcurementCentre } from "@/models"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import Link from "next/link"
-
-const prisma = new PrismaClient()
 
 export default async function FarmerPaymentsPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params
   const session = await auth()
 
-  const farmerProfile = await prisma.farmerProfile.findUnique({
-    where: { userId: session?.user.id }
-  })
+  await connectToDatabase()
 
-  const procurements = await prisma.procurement.findMany({
-    where: {
-      booking: { farmerId: farmerProfile?.id }
-    },
-    include: {
-      booking: { include: { centre: true } }
-    },
-    orderBy: { createdAt: 'desc' }
-  })
+  const farmerProfile = await FarmerProfile.findOne({ userId: session?.user.id })
 
-  const totalDisbursed = procurements
-    .filter(p => p.paymentStatus === 'COMPLETED')
+  let procurementsData: any[] = []
+  if (farmerProfile) {
+    const farmerBookings = await Booking.find({ farmerId: farmerProfile._id }).lean()
+    const bookingIds = farmerBookings.map(b => b._id)
+
+    const rawProcurements = await Procurement.find({ bookingId: { $in: bookingIds } })
+      .sort({ createdAt: -1 })
+      .lean()
+
+    procurementsData = await Promise.all(
+      rawProcurements.map(async (p) => {
+        const booking = await Booking.findById(p.bookingId).lean()
+        const centre = booking ? await ProcurementCentre.findById(booking.centreId).lean() : null
+        return {
+          id: p._id.toString(),
+          crop: p.crop,
+          quantity: p.quantity,
+          paymentStatus: p.paymentStatus,
+          tokenNumber: booking?.tokenNumber || 'TKN-0000',
+          centreName: centre?.name || 'Mandi Samiti'
+        }
+      })
+    )
+  }
+
+  const totalDisbursed = procurementsData
+    .filter(p => p.paymentStatus === 'COMPLETED' || p.paymentStatus === 'SUCCESS')
     .reduce((acc, p) => acc + Math.round(p.quantity * 2275), 0)
 
-  const pendingDisbursal = procurements
-    .filter(p => p.paymentStatus !== 'COMPLETED')
+  const pendingDisbursal = procurementsData
+    .filter(p => p.paymentStatus !== 'COMPLETED' && p.paymentStatus !== 'SUCCESS')
     .reduce((acc, p) => acc + Math.round(p.quantity * 2275), 0)
 
   return (
@@ -79,7 +91,7 @@ export default async function FarmerPaymentsPage({ params }: { params: Promise<{
           <CardDescription className="text-xs text-slate-500">PFMS direct bank transfers processed for your account</CardDescription>
         </CardHeader>
         <CardContent className="pt-4">
-          {procurements.length === 0 ? (
+          {procurementsData.length === 0 ? (
             <p className="text-center text-sm text-slate-500 py-8">No payment records available yet.</p>
           ) : (
             <div className="overflow-x-auto">
@@ -95,17 +107,17 @@ export default async function FarmerPaymentsPage({ params }: { params: Promise<{
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {procurements.map((p) => {
+                  {procurementsData.map((p) => {
                     const amount = Math.round(p.quantity * 2275)
                     return (
                       <tr key={p.id} className="hover:bg-slate-50">
-                        <td className="p-3 font-bold text-slate-900">{p.booking.tokenNumber}</td>
+                        <td className="p-3 font-bold text-slate-900">{p.tokenNumber}</td>
                         <td className="p-3">{p.crop} ({p.quantity} Qtl)</td>
-                        <td className="p-3">{p.booking.centre.name}</td>
+                        <td className="p-3">{p.centreName}</td>
                         <td className="p-3 font-black text-green-800">₹ {amount.toLocaleString('en-IN')}</td>
                         <td className="p-3">
                           <span className={`px-2 py-0.5 rounded-full font-bold text-[10px] ${
-                            p.paymentStatus === 'COMPLETED' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                            p.paymentStatus === 'COMPLETED' || p.paymentStatus === 'SUCCESS' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
                           }`}>
                             {p.paymentStatus}
                           </span>

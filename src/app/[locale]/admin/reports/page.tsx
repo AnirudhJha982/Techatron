@@ -1,11 +1,12 @@
-import { PrismaClient } from "@prisma/client"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { connectToDatabase } from "@/lib/mongodb"
+import { Procurement } from "@/models"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 
-const prisma = new PrismaClient()
-
 export default async function AdminReportsPage() {
-  const procurements = await prisma.procurement.findMany()
+  await connectToDatabase()
+
+  const procurements = await Procurement.find({}).lean()
   const totalQuantity = procurements.reduce((a, b) => a + b.quantity, 0)
   const totalDisbursed = procurements.reduce((a, b) => a + Math.round(b.quantity * 2275), 0)
 

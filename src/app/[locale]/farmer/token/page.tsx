@@ -1,30 +1,38 @@
 import { auth } from "@/auth"
-import { PrismaClient } from "@prisma/client"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { connectToDatabase } from "@/lib/mongodb"
+import { FarmerProfile, Booking, ProcurementCentre, Slot } from "@/models"
+import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-
-const prisma = new PrismaClient()
 
 export default async function FarmerTokenPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params
   const session = await auth()
 
-  const farmerProfile = await prisma.farmerProfile.findUnique({
-    where: { userId: session?.user.id }
-  })
+  await connectToDatabase()
 
-  const activeBooking = await prisma.booking.findFirst({
-    where: {
-      farmerId: farmerProfile?.id,
-      status: { in: ['SCHEDULED', 'ARRIVED', 'PROCESSING'] }
-    },
-    include: {
-      centre: true,
-      slot: true
-    },
-    orderBy: { date: 'asc' }
-  })
+  const farmerProfile = await FarmerProfile.findOne({ userId: session?.user.id })
+
+  let activeBookingData: any = null
+  if (farmerProfile) {
+    const rawBooking = await Booking.findOne({
+      farmerId: farmerProfile._id,
+      status: { $in: ['SCHEDULED', 'ARRIVED', 'PROCESSING'] }
+    }).sort({ date: 1 }).lean()
+
+    if (rawBooking) {
+      const centre = await ProcurementCentre.findById(rawBooking.centreId).lean()
+      const slot = await Slot.findById(rawBooking.slotId).lean()
+      activeBookingData = {
+        tokenNumber: rawBooking.tokenNumber,
+        status: rawBooking.status,
+        date: rawBooking.date,
+        queuePosition: rawBooking.queuePosition,
+        centreName: centre?.name || 'Mandi Samiti',
+        timeSlot: slot?.timeSlot || 'Morning'
+      }
+    }
+  }
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
@@ -38,19 +46,19 @@ export default async function FarmerTokenPage({ params }: { params: Promise<{ lo
         </Link>
       </div>
 
-      {activeBooking ? (
+      {activeBookingData ? (
         <Card className="shadow-lg border-2 border-yellow-400 overflow-hidden">
           <div className="bg-gradient-to-r from-green-950 via-green-900 to-green-950 text-white p-8">
             <div className="flex justify-between items-center mb-4">
               <span className="bg-yellow-400 text-green-950 text-xs font-black px-3 py-1 rounded uppercase">Valid Entry Pass</span>
-              <span className="text-xs text-green-200">Date: {activeBooking.date.toLocaleDateString()}</span>
+              <span className="text-xs text-green-200">Date: {new Date(activeBookingData.date).toLocaleDateString()}</span>
             </div>
 
             <div className="text-center py-6 border-y border-green-800 my-4 bg-green-950/50 rounded-xl">
               <p className="text-xs uppercase text-green-300 tracking-widest font-bold">Token Number</p>
-              <p className="text-5xl font-black text-yellow-400 tracking-tighter my-2">{activeBooking.tokenNumber}</p>
+              <p className="text-5xl font-black text-yellow-400 tracking-tighter my-2">{activeBookingData.tokenNumber}</p>
               <span className="inline-block px-3 py-1 bg-yellow-400/20 text-yellow-300 text-xs font-bold rounded-full border border-yellow-400/40">
-                Current Status: {activeBooking.status}
+                Current Status: {activeBookingData.status}
               </span>
             </div>
 
@@ -61,15 +69,15 @@ export default async function FarmerTokenPage({ params }: { params: Promise<{ lo
               </div>
               <div>
                 <p className="text-green-300">Procurement Mandi:</p>
-                <p className="font-bold text-white text-sm">{activeBooking.centre.name}</p>
+                <p className="font-bold text-white text-sm">{activeBookingData.centreName}</p>
               </div>
               <div>
                 <p className="text-green-300">Allocated Time Slot:</p>
-                <p className="font-bold text-white text-sm">{activeBooking.slot.timeSlot}</p>
+                <p className="font-bold text-white text-sm">{activeBookingData.timeSlot}</p>
               </div>
               <div>
                 <p className="text-green-300">Queue Position:</p>
-                <p className="font-bold text-yellow-300 text-sm">#{activeBooking.queuePosition || 1}</p>
+                <p className="font-bold text-yellow-300 text-sm">#{activeBookingData.queuePosition || 1}</p>
               </div>
             </div>
 

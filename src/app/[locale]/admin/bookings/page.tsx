@@ -1,17 +1,31 @@
-import { PrismaClient } from "@prisma/client"
+import { connectToDatabase } from "@/lib/mongodb"
+import { Booking, FarmerProfile, User, ProcurementCentre, Slot } from "@/models"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
-const prisma = new PrismaClient()
-
 export default async function AdminBookingsPage() {
-  const bookings = await prisma.booking.findMany({
-    include: {
-      farmer: { include: { user: true } },
-      centre: true,
-      slot: true
-    },
-    orderBy: { createdAt: 'desc' }
-  })
+  await connectToDatabase()
+
+  const rawBookings = await Booking.find({}).sort({ createdAt: -1 }).lean()
+
+  const bookings = await Promise.all(
+    rawBookings.map(async (b) => {
+      const farmerProfile = await FarmerProfile.findById(b.farmerId).lean()
+      const farmerUser = farmerProfile ? await User.findById(farmerProfile.userId).lean() : null
+      const centre = await ProcurementCentre.findById(b.centreId).lean()
+      const slot = await Slot.findById(b.slotId).lean()
+
+      return {
+        id: b._id.toString(),
+        tokenNumber: b.tokenNumber,
+        farmerName: farmerUser?.name || 'Farmer',
+        farmerPhone: farmerUser?.phoneNumber || 'N/A',
+        centreName: centre?.name || 'Mandi Samiti',
+        date: b.date,
+        timeSlot: slot?.timeSlot || 'Morning',
+        status: b.status
+      }
+    })
+  )
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
@@ -41,10 +55,10 @@ export default async function AdminBookingsPage() {
                 {bookings.map((b) => (
                   <tr key={b.id} className="hover:bg-slate-50">
                     <td className="p-3 font-black text-slate-900">{b.tokenNumber}</td>
-                    <td className="p-3 font-bold text-slate-800">{b.farmer.user.name}</td>
-                    <td className="p-3 text-slate-600">{b.farmer.user.phoneNumber}</td>
-                    <td className="p-3">{b.centre.name}</td>
-                    <td className="p-3">{b.date.toLocaleDateString()} ({b.slot.timeSlot})</td>
+                    <td className="p-3 font-bold text-slate-800">{b.farmerName}</td>
+                    <td className="p-3 text-slate-600">{b.farmerPhone}</td>
+                    <td className="p-3">{b.centreName}</td>
+                    <td className="p-3">{new Date(b.date).toLocaleDateString()} ({b.timeSlot})</td>
                     <td className="p-3">
                       <span className={`px-2 py-0.5 rounded-full font-bold text-[10px] ${
                         b.status === 'COMPLETED' ? 'bg-green-100 text-green-800' :

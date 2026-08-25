@@ -1,21 +1,20 @@
 import { auth } from "@/auth"
-import { PrismaClient } from "@prisma/client"
+import { connectToDatabase } from "@/lib/mongodb"
+import { User, FarmerProfile } from "@/models"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { updateFarmerProfileAction } from "@/app/actions/farmerActions"
 
-const prisma = new PrismaClient()
-
 export default async function FarmerProfilePage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params
   const session = await auth()
 
-  const user = await prisma.user.findUnique({
-    where: { id: session?.user.id },
-    include: { farmerProfile: true }
-  })
+  await connectToDatabase()
+
+  const user = session?.user?.id ? await User.findById(session.user.id).lean() : null
+  const farmerProfile = user ? await FarmerProfile.findOne({ userId: user._id }).lean() : null
 
   return (
     <div className="space-y-6 max-w-3xl mx-auto">
@@ -47,21 +46,21 @@ export default async function FarmerProfilePage({ params }: { params: Promise<{ 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="space-y-1.5">
                 <Label htmlFor="village">Village</Label>
-                <Input id="village" name="village" defaultValue={user?.farmerProfile?.village || ''} />
+                <Input id="village" name="village" defaultValue={farmerProfile?.village || ''} />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="district">District</Label>
-                <Input id="district" name="district" defaultValue={user?.farmerProfile?.district || ''} />
+                <Input id="district" name="district" defaultValue={farmerProfile?.district || ''} />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="state">State</Label>
-                <Input id="state" name="state" defaultValue={user?.farmerProfile?.state || ''} />
+                <Input id="state" name="state" defaultValue={farmerProfile?.state || ''} />
               </div>
             </div>
 
             <div className="space-y-1.5">
               <Label htmlFor="landSizeAcres">Registered Land Area (Acres)</Label>
-              <Input id="landSizeAcres" name="landSizeAcres" type="number" step="0.1" defaultValue={user?.farmerProfile?.landSizeAcres || 5.0} />
+              <Input id="landSizeAcres" name="landSizeAcres" type="number" step="0.1" defaultValue={farmerProfile?.landSizeAcres || 5.0} />
             </div>
 
             <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs space-y-1 text-slate-600">

@@ -1,20 +1,16 @@
 import { auth } from "@/auth"
-import { PrismaClient } from "@prisma/client"
+import { connectToDatabase } from "@/lib/mongodb"
+import { User, WorkerProfile, ProcurementCentre } from "@/models"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-
-const prisma = new PrismaClient()
 
 export default async function WorkerProfilePage() {
   const session = await auth()
 
-  const user = await prisma.user.findUnique({
-    where: { id: session?.user.id },
-    include: {
-      workerProfile: {
-        include: { centre: true }
-      }
-    }
-  })
+  await connectToDatabase()
+
+  const user = session?.user?.id ? await User.findById(session.user.id).lean() : null
+  const workerProfile = user ? await WorkerProfile.findOne({ userId: user._id }).lean() : null
+  const centre = workerProfile ? await ProcurementCentre.findById(workerProfile.centreId).lean() : null
 
   return (
     <div className="space-y-6 max-w-3xl mx-auto">
@@ -38,8 +34,8 @@ export default async function WorkerProfilePage() {
           </div>
           <div>
             <span className="text-slate-500 text-xs block">Assigned Mandi Centre:</span>
-            <strong className="text-amber-900 font-bold text-base">{user?.workerProfile?.centre.name}</strong>
-            <p className="text-xs text-slate-500">{user?.workerProfile?.centre.address}</p>
+            <strong className="text-amber-900 font-bold text-base">{centre?.name || 'Mandi Samiti'}</strong>
+            <p className="text-xs text-slate-500">{centre?.address || 'N/A'}</p>
           </div>
           <div>
             <span className="text-slate-500 text-xs block">System Role:</span>

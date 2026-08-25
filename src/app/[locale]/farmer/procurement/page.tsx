@@ -1,28 +1,44 @@
 import { auth } from "@/auth"
-import { PrismaClient } from "@prisma/client"
+import { connectToDatabase } from "@/lib/mongodb"
+import { FarmerProfile, Booking, Procurement, ProcurementCentre } from "@/models"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import Link from "next/link"
-
-const prisma = new PrismaClient()
 
 export default async function FarmerProcurementPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params
   const session = await auth()
 
-  const farmerProfile = await prisma.farmerProfile.findUnique({
-    where: { userId: session?.user.id }
-  })
+  await connectToDatabase()
 
-  // Procurements for farmer
-  const procurements = await prisma.procurement.findMany({
-    where: {
-      booking: { farmerId: farmerProfile?.id }
-    },
-    include: {
-      booking: { include: { centre: true } }
-    },
-    orderBy: { createdAt: 'desc' }
-  })
+  const farmerProfile = await FarmerProfile.findOne({ userId: session?.user.id })
+
+  let procurementsData: any[] = []
+  if (farmerProfile) {
+    const farmerBookings = await Booking.find({ farmerId: farmerProfile._id }).lean()
+    const bookingIds = farmerBookings.map(b => b._id)
+
+    const rawProcurements = await Procurement.find({ bookingId: { $in: bookingIds } })
+      .sort({ createdAt: -1 })
+      .lean()
+
+    procurementsData = await Promise.all(
+      rawProcurements.map(async (p) => {
+        const booking = await Booking.findById(p.bookingId).lean()
+        const centre = booking ? await ProcurementCentre.findById(booking.centreId).lean() : null
+        return {
+          id: p._id.toString(),
+          crop: p.crop,
+          quantity: p.quantity,
+          qualityGrade: p.qualityGrade,
+          moistureLevel: p.moistureLevel,
+          paymentStatus: p.paymentStatus,
+          remarks: p.remarks,
+          createdAt: p.createdAt,
+          tokenNumber: booking?.tokenNumber || 'TKN-0000',
+          centreName: centre?.name || 'Mandi Samiti'
+        }
+      })
+    )
+  }
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
@@ -31,7 +47,7 @@ export default async function FarmerProcurementPage({ params }: { params: Promis
         <p className="text-sm text-slate-500 mt-1">Details of weighed, graded, and approved crop sales</p>
       </div>
 
-      {procurements.length === 0 ? (
+      {procurementsData.length === 0 ? (
         <Card className="p-12 text-center bg-white border-dashed border-2">
           <span className="text-5xl mb-3 block">🌾</span>
           <h3 className="text-xl font-bold text-slate-800">No Procurement Records Found</h3>
@@ -39,7 +55,7 @@ export default async function FarmerProcurementPage({ params }: { params: Promis
         </Card>
       ) : (
         <div className="space-y-6">
-          {procurements.map((p) => {
+          {procurementsData.map((p) => {
             const mspRate = 2275
             const totalVal = Math.round(p.quantity * mspRate)
             return (
@@ -52,7 +68,7 @@ export default async function FarmerProcurementPage({ params }: { params: Promis
                       </span>
                       <CardTitle className="text-xl font-bold text-slate-900 mt-1">{p.crop}</CardTitle>
                       <CardDescription className="text-xs text-slate-500">
-                        Token: <strong>{p.booking.tokenNumber}</strong> • Mandi: <strong>{p.booking.centre.name}</strong>
+                        Token: <strong>{p.tokenNumber}</strong> • Mandi: <strong>{p.centreName}</strong>
                       </CardDescription>
                     </div>
                     <div className="mt-3 sm:mt-0 text-left sm:text-right">
@@ -78,7 +94,7 @@ export default async function FarmerProcurementPage({ params }: { params: Promis
                     </div>
                     <div>
                       <span className="text-slate-500 block">Verification Date:</span>
-                      <strong className="text-slate-900 text-sm">{p.createdAt.toLocaleDateString()}</strong>
+                      <strong className="text-slate-900 text-sm">{new Date(p.createdAt).toLocaleDateString()}</strong>
                     </div>
                   </div>
 
@@ -90,7 +106,7 @@ export default async function FarmerProcurementPage({ params }: { params: Promis
                         { label: "1. Slot Booked", done: true },
                         { label: "2. Arrived & Weighed", done: true },
                         { label: "3. Quality Approved", done: true },
-                        { label: "4. DBT Payment Disbursed", done: p.paymentStatus === 'COMPLETED' }
+                        { label: "4. DBT Payment Disbursed", done: p.paymentStatus === 'COMPLETED' || p.paymentStatus === 'SUCCESS' }
                       ].map((step, i) => (
                         <div key={i} className={`p-2.5 rounded-lg border font-bold ${
                           step.done ? 'bg-green-100 text-green-900 border-green-300' : 'bg-slate-100 text-slate-400 border-slate-200'

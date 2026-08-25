@@ -1,13 +1,24 @@
-import { PrismaClient } from "@prisma/client"
+import { connectToDatabase } from "@/lib/mongodb"
+import { AuditLog, User } from "@/models"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
-const prisma = new PrismaClient()
-
 export default async function AdminAuditLogsPage() {
-  const auditLogs = await prisma.auditLog.findMany({
-    include: { user: true },
-    orderBy: { createdAt: 'desc' }
-  })
+  await connectToDatabase()
+
+  const rawLogs = await AuditLog.find({}).sort({ createdAt: -1 }).lean()
+
+  const auditLogs = await Promise.all(
+    rawLogs.map(async (log) => {
+      const user = log.userId ? await User.findById(log.userId).lean() : null
+      return {
+        id: log._id.toString(),
+        action: log.action,
+        details: log.details,
+        createdAt: log.createdAt,
+        userName: user?.name || 'System'
+      }
+    })
+  )
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
@@ -34,13 +45,13 @@ export default async function AdminAuditLogsPage() {
               <tbody className="divide-y divide-slate-100">
                 {auditLogs.map((log) => (
                   <tr key={log.id} className="hover:bg-slate-50">
-                    <td className="p-3 text-slate-500 font-mono">{log.createdAt.toLocaleString()}</td>
+                    <td className="p-3 text-slate-500 font-mono">{new Date(log.createdAt).toLocaleString()}</td>
                     <td className="p-3 font-bold text-slate-900">
                       <span className="bg-slate-100 text-slate-800 px-2 py-0.5 rounded font-mono text-[10px]">
                         {log.action}
                       </span>
                     </td>
-                    <td className="p-3 font-bold text-slate-800">{log.user?.name || 'System'}</td>
+                    <td className="p-3 font-bold text-slate-800">{log.userName}</td>
                     <td className="p-3 text-slate-600">{log.details}</td>
                   </tr>
                 ))}

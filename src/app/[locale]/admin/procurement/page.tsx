@@ -1,21 +1,33 @@
-import { PrismaClient } from "@prisma/client"
+import { connectToDatabase } from "@/lib/mongodb"
+import { Procurement, Booking, FarmerProfile, User, ProcurementCentre, WorkerProfile } from "@/models"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
-const prisma = new PrismaClient()
-
 export default async function AdminProcurementPage() {
-  const procurements = await prisma.procurement.findMany({
-    include: {
-      booking: {
-        include: {
-          farmer: { include: { user: true } },
-          centre: true
-        }
-      },
-      worker: { include: { user: true } }
-    },
-    orderBy: { createdAt: 'desc' }
-  })
+  await connectToDatabase()
+
+  const rawProcurements = await Procurement.find({}).sort({ createdAt: -1 }).lean()
+
+  const procurements = await Promise.all(
+    rawProcurements.map(async (p) => {
+      const booking = await Booking.findById(p.bookingId).lean()
+      const farmerProfile = booking ? await FarmerProfile.findById(booking.farmerId).lean() : null
+      const farmerUser = farmerProfile ? await User.findById(farmerProfile.userId).lean() : null
+      const centre = booking ? await ProcurementCentre.findById(booking.centreId).lean() : null
+      const workerProfile = await WorkerProfile.findById(p.workerId).lean()
+      const workerUser = workerProfile ? await User.findById(workerProfile.userId).lean() : null
+
+      return {
+        id: p._id.toString(),
+        crop: p.crop,
+        quantity: p.quantity,
+        qualityGrade: p.qualityGrade,
+        moistureLevel: p.moistureLevel,
+        farmerName: farmerUser?.name || 'Farmer',
+        centreName: centre?.name || 'Mandi Samiti',
+        workerName: workerUser?.name || 'Supervisor'
+      }
+    })
+  )
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
@@ -49,13 +61,13 @@ export default async function AdminProcurementPage() {
                   return (
                     <tr key={p.id} className="hover:bg-slate-50">
                       <td className="p-3 font-mono font-bold text-slate-900">#{p.id.slice(-6)}</td>
-                      <td className="p-3 font-bold text-slate-800">{p.booking.farmer.user.name}</td>
-                      <td className="p-3">{p.booking.centre.name}</td>
+                      <td className="p-3 font-bold text-slate-800">{p.farmerName}</td>
+                      <td className="p-3">{p.centreName}</td>
                       <td className="p-3 font-semibold">{p.crop}</td>
                       <td className="p-3 font-black text-slate-900">{p.quantity} Qtl</td>
                       <td className="p-3">{p.qualityGrade} ({p.moistureLevel || 11.5}%)</td>
                       <td className="p-3 font-black text-green-800">₹ {totalVal.toLocaleString('en-IN')}</td>
-                      <td className="p-3 text-slate-500">{p.worker.user.name}</td>
+                      <td className="p-3 text-slate-500">{p.workerName}</td>
                     </tr>
                   )
                 })}

@@ -1,6 +1,7 @@
 import NextAuth from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
-import { prisma } from "@/lib/prisma"
+import { connectToDatabase } from "@/lib/mongodb"
+import { User } from "@/models"
 import bcrypt from "bcryptjs"
 import { authConfig } from "./auth.config"
 
@@ -17,9 +18,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (!credentials?.phoneNumber || !credentials?.password) {
           return null
         }
-        const user = await prisma.user.findUnique({
-          where: { phoneNumber: credentials.phoneNumber as string }
-        })
+        await connectToDatabase()
+        const user = await User.findOne({ phoneNumber: credentials.phoneNumber as string })
         if (!user) return null
         
         const passwordsMatch = await bcrypt.compare(
@@ -28,7 +28,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         )
         if (passwordsMatch) {
           return {
-            id: user.id,
+            id: user._id.toString(),
             name: user.name,
             role: user.role,
             language: user.language

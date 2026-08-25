@@ -1,22 +1,21 @@
 import { auth } from "@/auth"
-import { PrismaClient } from "@prisma/client"
+import { connectToDatabase } from "@/lib/mongodb"
+import { WorkerProfile, ProcurementCentre, Booking, FarmerProfile, User, Slot, Procurement } from "@/models"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-
-const prisma = new PrismaClient()
 
 export default async function WorkerDashboardPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params
   const session = await auth()
 
-  const workerProfile = await prisma.workerProfile.findUnique({
-    where: { userId: session?.user.id },
-    include: { centre: true }
-  })
+  await connectToDatabase()
 
-  if (!workerProfile) {
-    return <div className="p-8 text-red-600 font-bold">Worker profile not configured.</div>
+  const workerProfile = await WorkerProfile.findOne({ userId: session?.user.id })
+  const centre = workerProfile ? await ProcurementCentre.findById(workerProfile.centreId).lean() : null
+
+  if (!workerProfile || !centre) {
+    return <div className="p-8 text-red-600 font-bold">Worker profile or Procurement Centre not configured.</div>
   }
 
   // Today's bookings for this centre
@@ -25,27 +24,36 @@ export default async function WorkerDashboardPage({ params }: { params: Promise<
   const tomorrow = new Date(today)
   tomorrow.setDate(tomorrow.getDate() + 1)
 
-  const todaysBookings = await prisma.booking.findMany({
-    where: {
-      centreId: workerProfile.centreId,
-      date: { gte: today, lt: tomorrow }
-    },
-    include: {
-      farmer: { include: { user: true } },
-      slot: true,
-      procurement: true
-    },
-    orderBy: { tokenNumber: 'asc' }
-  })
+  const rawBookings = await Booking.find({
+    centreId: workerProfile.centreId,
+    date: { $gte: today, $lt: tomorrow }
+  }).sort({ tokenNumber: 1 }).lean()
+
+  const todaysBookings = await Promise.all(
+    rawBookings.map(async (b) => {
+      const farmerProfile = await FarmerProfile.findById(b.farmerId).lean()
+      const farmerUser = farmerProfile ? await User.findById(farmerProfile.userId).lean() : null
+      const slot = await Slot.findById(b.slotId).lean()
+      const procurement = await Procurement.findOne({ bookingId: b._id }).lean()
+
+      return {
+        id: b._id.toString(),
+        tokenNumber: b.tokenNumber,
+        status: b.status,
+        farmerName: farmerUser?.name || 'Farmer',
+        farmerPhone: farmerUser?.phoneNumber || 'N/A',
+        timeSlot: slot?.timeSlot || 'Morning',
+        procurementQuantity: procurement?.quantity || 0
+      }
+    })
+  )
 
   const totalScheduled = todaysBookings.length
   const arrived = todaysBookings.filter(b => b.status === 'ARRIVED').length
   const processing = todaysBookings.filter(b => b.status === 'PROCESSING').length
   const completed = todaysBookings.filter(b => b.status === 'COMPLETED').length
 
-  const totalQuantityToday = todaysBookings
-    .filter(b => b.procurement)
-    .reduce((acc, b) => acc + (b.procurement?.quantity || 0), 0)
+  const totalQuantityToday = todaysBookings.reduce((acc, b) => acc + b.procurementQuantity, 0)
 
   return (
     <div className="space-y-8">
@@ -53,8 +61,8 @@ export default async function WorkerDashboardPage({ params }: { params: Promise<
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
         <div>
           <span className="text-xs font-bold bg-amber-100 text-amber-900 px-3 py-1 rounded-full uppercase">Centre Supervisor Control Panel</span>
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 mt-2">{workerProfile.centre.name}</h1>
-          <p className="text-xs text-slate-500 mt-1">{workerProfile.centre.address} • Daily Capacity: {workerProfile.centre.capacityPerDay} Qtl</p>
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 mt-2">{centre.name}</h1>
+          <p className="text-xs text-slate-500 mt-1">{centre.address} • Daily Capacity: {centre.capacityPerDay} Qtl</p>
         </div>
         <div className="mt-4 sm:mt-0 flex gap-3">
           <Link href={`/${locale}/worker/queue`}>
@@ -148,9 +156,9 @@ export default async function WorkerDashboardPage({ params }: { params: Promise<
                   {todaysBookings.map((b) => (
                     <tr key={b.id} className="hover:bg-slate-50">
                       <td className="p-3 font-black text-slate-900">{b.tokenNumber}</td>
-                      <td className="p-3 font-bold text-slate-800">{b.farmer.user.name}</td>
-                      <td className="p-3 text-slate-600">{b.farmer.user.phoneNumber}</td>
-                      <td className="p-3">{b.slot.timeSlot}</td>
+                      <td className="p-3 font-bold text-slate-800">{b.farmerName}</td>
+                      <td className="p-3 text-slate-600">{b.farmerPhone}</td>
+                      <td className="p-3">{b.timeSlot}</td>
                       <td className="p-3">
                         <span className={`px-2.5 py-0.5 rounded-full font-bold text-[10px] ${
                           b.status === 'COMPLETED' ? 'bg-green-100 text-green-800' :

@@ -1,6 +1,7 @@
 "use server"
 
-import { prisma } from "@/lib/prisma"
+import { connectToDatabase } from "@/lib/mongodb"
+import { User, FarmerProfile, Grievance, Notification, AuditLog, Slot, Booking } from "@/models"
 import { auth } from "@/auth"
 import { revalidatePath } from "next/cache"
 
@@ -10,26 +11,24 @@ export async function createGrievanceAction(category: string, description: strin
     throw new Error("Unauthorized")
   }
 
-  const grievance = await prisma.grievance.create({
-    data: {
-      userId: session.user.id,
-      category,
-      description,
-      status: "SUBMITTED"
-    }
+  await connectToDatabase()
+
+  const grievance = await Grievance.create({
+    userId: session.user.id,
+    category,
+    description,
+    status: "SUBMITTED"
   })
 
   // Create audit log
-  await prisma.auditLog.create({
-    data: {
-      userId: session.user.id,
-      action: "GRIEVANCE_RAISED",
-      details: `Grievance #${grievance.id.slice(-6)} raised under category ${category}`
-    }
+  await AuditLog.create({
+    userId: session.user.id,
+    action: "GRIEVANCE_RAISED",
+    details: `Grievance #${grievance._id.toString().slice(-6)} raised under category ${category}`
   })
 
   revalidatePath('/farmer/grievances')
-  return { success: true, id: grievance.id }
+  return { success: true, id: grievance._id.toString() }
 }
 
 export async function updateFarmerProfileAction(formData: FormData): Promise<void> {
@@ -37,6 +36,8 @@ export async function updateFarmerProfileAction(formData: FormData): Promise<voi
   if (!session || !session.user) {
     throw new Error("Unauthorized")
   }
+
+  await connectToDatabase()
 
   const name = formData.get("name") as string
   const village = formData.get("village") as string
@@ -46,16 +47,13 @@ export async function updateFarmerProfileAction(formData: FormData): Promise<voi
 
   // Update user name
   if (name) {
-    await prisma.user.update({
-      where: { id: session.user.id },
-      data: { name }
-    })
+    await User.findByIdAndUpdate(session.user.id, { name })
   }
 
-  // Check or upsert profile
-  await prisma.farmerProfile.upsert({
-    where: { userId: session.user.id },
-    create: {
+  // Update or create profile
+  await FarmerProfile.findOneAndUpdate(
+    { userId: session.user.id },
+    {
       userId: session.user.id,
       village,
       district,
@@ -63,14 +61,8 @@ export async function updateFarmerProfileAction(formData: FormData): Promise<voi
       landSizeAcres,
       address: `${village || ''}, ${district || ''}, ${state || ''}`
     },
-    update: {
-      village,
-      district,
-      state,
-      landSizeAcres,
-      address: `${village || ''}, ${district || ''}, ${state || ''}`
-    }
-  })
+    { upsert: true, new: true }
+  )
 
   revalidatePath('/farmer/profile')
   revalidatePath('/farmer/dashboard')
@@ -80,10 +72,8 @@ export async function markNotificationReadAction(notificationId: string) {
   const session = await auth()
   if (!session || !session.user) return
 
-  await prisma.notification.update({
-    where: { id: notificationId },
-    data: { isRead: true }
-  })
+  await connectToDatabase()
+  await Notification.findByIdAndUpdate(notificationId, { isRead: true })
 
   revalidatePath('/farmer/notifications')
   revalidatePath('/farmer/dashboard')
@@ -95,68 +85,68 @@ export async function createBookingAction(centreId: string, slotId: string, crop
     throw new Error("Unauthorized")
   }
 
-  let farmerProfile = await prisma.farmerProfile.findUnique({
-    where: { userId: session.user.id }
-  })
+  await connectToDatabase()
 
+  let farmerProfile = await FarmerProfile.findOne({ userId: session.user.id })
   if (!farmerProfile) {
-    farmerProfile = await prisma.farmerProfile.create({
-      data: {
-        userId: session.user.id,
-        village: "Default Village",
-        district: "Karnal",
-        state: "Haryana",
-        landSizeAcres: 5.0
-      }
+    farmerProfile = await FarmerProfile.create({
+      userId: session.user.id,
+      village: "Default Village",
+      district: "Karnal",
+      state: "Haryana",
+      landSizeAcres: 5.0
     })
   }
 
   const bookingDate = new Date(dateStr)
-  
-  // Calculate queue count & token number
-  const countToday = await prisma.booking.count({
-    where: {
-      centreId,
-      date: bookingDate
-    }
-  })
+  bookingDate.setHours(0, 0, 0, 0)
 
+  // ATOMIC CONCURRENCY CONTROL:
+  const updatedSlot = await Slot.findOneAndUpdate(
+    {
+      _id: slotId,
+      $expr: { $lt: ["$bookedCount", "$capacity"] }
+    },
+    { $inc: { bookedCount: 1 } },
+    { new: true }
+  )
+
+  if (!updatedSlot) {
+    throw new Error("Selected slot is fully booked. Please choose another slot.")
+  }
+
+  // Calculate queue count & token number
+  const countToday = await Booking.countDocuments({ centreId, date: bookingDate })
   const tokenNum = `TKN-${centreId.slice(-3).toUpperCase()}-${String(countToday + 101).padStart(3, '0')}`
 
-  const booking = await prisma.booking.create({
-    data: {
-      farmerId: farmerProfile.id,
-      centreId,
-      slotId,
-      date: bookingDate,
-      tokenNumber: tokenNum,
-      queuePosition: countToday + 1,
-      status: "SCHEDULED"
-    }
+  const booking = await Booking.create({
+    farmerId: farmerProfile._id,
+    centreId,
+    slotId,
+    date: bookingDate,
+    tokenNumber: tokenNum,
+    queuePosition: countToday + 1,
+    status: "SCHEDULED"
   })
 
   // Create notification
-  await prisma.notification.create({
-    data: {
-      userId: session.user.id,
-      title: "Procurement Slot Booked!",
-      message: `Token ${tokenNum} confirmed for ${crop} on ${bookingDate.toLocaleDateString()}. Queue position #${countToday + 1}.`,
-      category: "BOOKING"
-    }
+  await Notification.create({
+    userId: session.user.id,
+    title: "Procurement Slot Booked!",
+    message: `Token ${tokenNum} confirmed for ${crop} on ${bookingDate.toLocaleDateString()}. Queue position #${countToday + 1}.`,
+    category: "BOOKING"
   })
 
   // Create audit log
-  await prisma.auditLog.create({
-    data: {
-      userId: session.user.id,
-      action: "BOOKING_CREATED",
-      details: `Slot booked at centre ${centreId} with token ${tokenNum}`
-    }
+  await AuditLog.create({
+    userId: session.user.id,
+    action: "BOOKING_CREATED",
+    details: `Slot booked at centre ${centreId} with token ${tokenNum}`
   })
 
   revalidatePath('/farmer/dashboard')
   revalidatePath('/farmer/booking')
   revalidatePath('/farmer/queue')
   revalidatePath('/farmer/token')
-  return { success: true, bookingId: booking.id, tokenNumber: tokenNum }
+  return { success: true, bookingId: booking._id.toString(), tokenNumber: tokenNum }
 }

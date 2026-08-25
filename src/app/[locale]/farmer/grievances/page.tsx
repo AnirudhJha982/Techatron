@@ -1,21 +1,29 @@
 import { auth } from "@/auth"
-import { PrismaClient } from "@prisma/client"
+import { connectToDatabase } from "@/lib/mongodb"
+import { Grievance } from "@/models"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { createGrievanceAction } from "@/app/actions/farmerActions"
-
-const prisma = new PrismaClient()
 
 export default async function FarmerGrievancesPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params
   const session = await auth()
 
-  const grievances = await prisma.grievance.findMany({
-    where: { userId: session?.user.id },
-    orderBy: { createdAt: 'desc' }
-  })
+  await connectToDatabase()
+
+  const rawGrievances = await Grievance.find({ userId: session?.user.id })
+    .sort({ createdAt: -1 })
+    .lean()
+
+  const grievances = rawGrievances.map(g => ({
+    id: g._id.toString(),
+    category: g.category,
+    description: g.description,
+    status: g.status,
+    response: g.response,
+    createdAt: g.createdAt
+  }))
 
   return (
     <div className="space-y-8 max-w-4xl mx-auto">
@@ -93,7 +101,7 @@ export default async function FarmerGrievancesPage({ params }: { params: Promise
                       <strong>Officer Response:</strong> {g.response}
                     </div>
                   )}
-                  <span className="text-[10px] text-slate-400 block pt-1">{g.createdAt.toLocaleDateString()}</span>
+                  <span className="text-[10px] text-slate-400 block pt-1">{new Date(g.createdAt).toLocaleDateString()}</span>
                 </div>
               ))
             )}

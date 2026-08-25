@@ -1,7 +1,5 @@
 import mongoose from 'mongoose'
 
-const MONGODB_URI = process.env.MONGODB_URI || process.env.DATABASE_URL || 'mongodb://127.0.0.1:27017/kisan_portal'
-
 interface MongooseCache {
   conn: typeof mongoose | null
   promise: Promise<typeof mongoose> | null
@@ -19,6 +17,11 @@ if (!global.mongooseCache) {
 }
 
 export async function connectToDatabase() {
+  const uri = process.env.MONGODB_URI || process.env.DATABASE_URL
+  if (!uri) {
+    throw new Error('Please define MONGODB_URI or DATABASE_URL in Vercel Environment Variables.')
+  }
+
   if (cached.conn) {
     return cached.conn
   }
@@ -28,7 +31,7 @@ export async function connectToDatabase() {
       bufferCommands: false,
     }
 
-    cached.promise = mongoose.connect(MONGODB_URI, opts).then((m) => {
+    cached.promise = mongoose.connect(uri, opts).then((m) => {
       return m
     })
   }

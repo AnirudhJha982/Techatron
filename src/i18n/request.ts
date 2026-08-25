@@ -36,20 +36,21 @@ function isObject(item: any) {
 }
 
 function deepMerge(target: any, source: any) {
+  if (!isObject(target)) return source || {};
+  if (!isObject(source)) return target;
+
   const output = { ...target };
-  if (isObject(target) && isObject(source)) {
-    Object.keys(source).forEach(key => {
-      if (isObject(source[key])) {
-        if (!(key in target)) {
-          Object.assign(output, { [key]: source[key] });
-        } else {
-          output[key] = deepMerge(target[key], source[key]);
-        }
+  Object.keys(source).forEach(key => {
+    if (isObject(source[key])) {
+      if (key in target && isObject(target[key])) {
+        output[key] = deepMerge(target[key], source[key]);
       } else {
-        Object.assign(output, { [key]: source[key] });
+        output[key] = source[key];
       }
-    });
-  }
+    } else {
+      output[key] = source[key];
+    }
+  });
   return output;
 }
 

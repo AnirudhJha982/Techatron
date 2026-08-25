@@ -15,13 +15,18 @@ export default async function FarmerLayout({
   children: React.ReactNode
   params: Promise<{ locale: string }>
 }) {
-  const session = await auth()
-  if (!session || session.user.role !== "FARMER") {
-    const { locale } = await params
-    redirect(`/${locale}/login`)
+  const { locale } = await params
+
+  let session = null
+  try {
+    session = await auth()
+  } catch (e) {
+    session = null
   }
 
-  const { locale } = await params
+  if (!session || session.user?.role !== "FARMER") {
+    redirect(`/${locale}/login`)
+  }
 
   const tFarmer = await getTranslations({ locale, namespace: 'Farmer' })
   const tCommon = await getTranslations({ locale, namespace: 'Common' })

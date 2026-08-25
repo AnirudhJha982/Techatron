@@ -12,13 +12,18 @@ export default async function AdminLayout({
   children: React.ReactNode
   params: Promise<{ locale: string }>
 }) {
-  const session = await auth()
-  if (!session || session.user.role !== "ADMIN") {
-    const { locale } = await params
-    redirect(`/${locale}/login`)
+  const { locale } = await params
+
+  let session = null
+  try {
+    session = await auth()
+  } catch (e) {
+    session = null
   }
 
-  const { locale } = await params
+  if (!session || session.user?.role !== "ADMIN") {
+    redirect(`/${locale}/login`)
+  }
 
   const tAdmin = await getTranslations({ locale, namespace: 'Admin' })
   const tCommon = await getTranslations({ locale, namespace: 'Common' })

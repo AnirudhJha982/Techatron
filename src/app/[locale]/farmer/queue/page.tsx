@@ -5,10 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import mongoose from "mongoose"
+import { getTranslations } from 'next-intl/server'
 
 export default async function FarmerQueuePage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params
   const session = await auth()
+
+  const tQueue = await getTranslations({ locale, namespace: 'Queue' })
 
   await connectToDatabase()
 
@@ -63,11 +66,11 @@ export default async function FarmerQueuePage({ params }: { params: Promise<{ lo
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Live Queue Status</h1>
-          <p className="text-sm text-slate-500 mt-1">Real-time Mandi token progression and queue movement</p>
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight">{tQueue('title')}</h1>
+          <p className="text-sm text-slate-500 mt-1">{tQueue('subtitle')}</p>
         </div>
         <Link href={`/${locale}/farmer/dashboard`}>
-          <Button variant="outline" size="sm">← Back</Button>
+          <Button variant="outline" size="sm">{tQueue('back')}</Button>
         </Link>
       </div>
 
@@ -76,27 +79,27 @@ export default async function FarmerQueuePage({ params }: { params: Promise<{ lo
           {/* Active Queue Summary Banner */}
           <div className="bg-gradient-to-r from-yellow-500 to-amber-500 text-green-950 p-6 rounded-2xl shadow-md border-2 border-yellow-300 flex flex-col sm:flex-row justify-between items-center">
             <div>
-              <span className="bg-green-950 text-yellow-400 text-xs font-black px-2.5 py-0.5 rounded uppercase">Your Active Booking</span>
+              <span className="bg-green-950 text-yellow-400 text-xs font-black px-2.5 py-0.5 rounded uppercase">{tQueue('yourActiveBooking')}</span>
               <h2 className="text-3xl font-black tracking-tight mt-1">{activeBookingData.tokenNumber}</h2>
               <p className="text-xs font-semibold text-green-950 mt-0.5">Centre: {activeBookingData.centreName}</p>
             </div>
             <div className="mt-4 sm:mt-0 text-center sm:text-right bg-green-950 text-white p-4 rounded-xl shadow-inner">
-              <p className="text-xs text-green-200">Current Position in Queue</p>
+              <p className="text-xs text-green-200">{tQueue('currentPosInQueue')}</p>
               <p className="text-3xl font-black text-yellow-400">#{activeBookingData.queuePosition || 1}</p>
-              <p className="text-[10px] text-green-300 mt-0.5">Est. Wait: ~25 Minutes</p>
+              <p className="text-[10px] text-green-300 mt-0.5">{tQueue('estWait')}</p>
             </div>
           </div>
 
           {/* Queue Visualization Cards */}
           <Card className="shadow-sm border-slate-200 bg-white">
             <CardHeader className="border-b bg-slate-50/50">
-              <CardTitle className="text-lg font-bold text-slate-900">Live Mandi Token Queue Progression</CardTitle>
-              <CardDescription className="text-xs text-slate-500">Showing order of tokens currently waiting or being served at Gate 2</CardDescription>
+              <CardTitle className="text-lg font-bold text-slate-900">{tQueue('liveProgressionTitle')}</CardTitle>
+              <CardDescription className="text-xs text-slate-500">{tQueue('liveProgressionSub')}</CardDescription>
             </CardHeader>
             <CardContent className="pt-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                 {queueList.length === 0 ? (
-                  <p className="col-span-full text-center text-sm text-slate-500 py-6">No queue tokens active right now.</p>
+                  <p className="col-span-full text-center text-sm text-slate-500 py-6">{tQueue('noActiveTokens')}</p>
                 ) : (
                   queueList.map((item) => {
                     const isYou = item.id === activeBookingData.id
@@ -114,7 +117,7 @@ export default async function FarmerQueuePage({ params }: { params: Promise<{ lo
                         <span className={`text-[10px] font-black px-2 py-0.5 rounded uppercase ${
                           isYou ? 'bg-yellow-500 text-green-950' : 'bg-slate-200 text-slate-700'
                         }`}>
-                          {isYou ? '👈 YOU' : item.status}
+                          {isYou ? tQueue('youLabel') : item.status}
                         </span>
 
                         <p className={`text-2xl font-black mt-2 ${isYou ? 'text-green-950' : 'text-slate-800'}`}>
@@ -135,12 +138,12 @@ export default async function FarmerQueuePage({ params }: { params: Promise<{ lo
                 <div className="flex items-center space-x-3 mb-3 sm:mb-0">
                   <span className="text-2xl">📱</span>
                   <div>
-                    <h4 className="text-sm font-bold text-slate-900">SMS / WhatsApp Queue Alerts</h4>
-                    <p className="text-xs text-slate-500">We will notify your mobile number when your turn is 2 tokens away.</p>
+                    <h4 className="text-sm font-bold text-slate-900">{tQueue('smsAlertTitle')}</h4>
+                    <p className="text-xs text-slate-500">{tQueue('smsAlertSub')}</p>
                   </div>
                 </div>
                 <Button size="sm" className="bg-green-800 hover:bg-green-700 text-white font-bold text-xs">
-                  ✓ SMS Alerts Active
+                  {tQueue('smsActiveBtn')}
                 </Button>
               </div>
             </CardContent>
@@ -149,11 +152,11 @@ export default async function FarmerQueuePage({ params }: { params: Promise<{ lo
       ) : (
         <Card className="p-12 text-center bg-white border-dashed border-2">
           <span className="text-5xl mb-3 block">⏳</span>
-          <h3 className="text-xl font-bold text-slate-800">No Active Queue Booking</h3>
-          <p className="text-sm text-slate-500 mt-1 mb-6">Book a procurement slot to track live Mandi token movement.</p>
+          <h3 className="text-xl font-bold text-slate-800">{tQueue('noActiveQueueTitle')}</h3>
+          <p className="text-sm text-slate-500 mt-1 mb-6">{tQueue('noActiveQueueSub')}</p>
           <Link href={`/${locale}/farmer/booking`}>
             <Button className="bg-green-800 hover:bg-green-700 text-white font-bold px-6">
-              Book Procurement Slot
+              {tQueue('bookSlotBtn')}
             </Button>
           </Link>
         </Card>

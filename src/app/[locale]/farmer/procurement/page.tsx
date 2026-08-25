@@ -3,10 +3,13 @@ import { connectToDatabase } from "@/lib/mongodb"
 import { FarmerProfile, Booking, Procurement, ProcurementCentre } from "@/models"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import mongoose from "mongoose"
+import { getTranslations } from 'next-intl/server'
 
 export default async function FarmerProcurementPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params
   const session = await auth()
+
+  const tProcurement = await getTranslations({ locale, namespace: 'Procurement' })
 
   await connectToDatabase()
 
@@ -31,13 +34,13 @@ export default async function FarmerProcurementPage({ params }: { params: Promis
           id: p._id.toString(),
           crop: p.crop,
           quantity: p.quantity,
-          qualityGrade: p.qualityGrade,
-          moistureLevel: p.moistureLevel,
+          moisture: (p as any).moistureLevel || (p as any).moisture || 12.5,
+          grade: p.qualityGrade,
           paymentStatus: p.paymentStatus,
-          remarks: p.remarks,
-          createdAt: p.createdAt,
+          remarks: p.remarks || 'Produce verified and stored at central silo.',
           tokenNumber: booking?.tokenNumber || 'TKN-0000',
-          centreName: centre?.name || 'Mandi Samiti'
+          centreName: centre?.name || 'Mandi Samiti',
+          date: p.createdAt ? new Date(p.createdAt).toLocaleDateString() : 'Today'
         }
       })
     )
@@ -46,90 +49,66 @@ export default async function FarmerProcurementPage({ params }: { params: Promis
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
       <div>
-        <h1 className="text-3xl font-black text-slate-900 tracking-tight">Procurement Status & Quality Reports</h1>
-        <p className="text-sm text-slate-500 mt-1">Details of weighed, graded, and approved crop sales</p>
+        <h1 className="text-3xl font-black text-slate-900 tracking-tight">{tProcurement('title')}</h1>
+        <p className="text-sm text-slate-500 mt-1">{tProcurement('subtitle')}</p>
       </div>
 
       {procurementsData.length === 0 ? (
         <Card className="p-12 text-center bg-white border-dashed border-2">
           <span className="text-5xl mb-3 block">🌾</span>
-          <h3 className="text-xl font-bold text-slate-800">No Procurement Records Found</h3>
-          <p className="text-sm text-slate-500 mt-1">Once your produce is weighed and graded at the Mandi, details will appear here.</p>
+          <h3 className="text-xl font-bold text-slate-800">{tProcurement('noRecordsTitle')}</h3>
+          <p className="text-sm text-slate-500 mt-1">{tProcurement('noRecordsSub')}</p>
         </Card>
       ) : (
-        <div className="space-y-6">
-          {procurementsData.map((p) => {
-            const mspRate = 2275
-            const totalVal = Math.round(p.quantity * mspRate)
-            return (
-              <Card key={p.id} className="shadow-sm border-slate-200 bg-white">
-                <CardHeader className="border-b bg-slate-50/50">
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
-                    <div>
-                      <span className="bg-green-100 text-green-800 text-xs font-bold px-2.5 py-0.5 rounded">
-                        Procurement Approved ✓
-                      </span>
-                      <CardTitle className="text-xl font-bold text-slate-900 mt-1">{p.crop}</CardTitle>
-                      <CardDescription className="text-xs text-slate-500">
-                        Token: <strong>{p.tokenNumber}</strong> • Mandi: <strong>{p.centreName}</strong>
-                      </CardDescription>
-                    </div>
-                    <div className="mt-3 sm:mt-0 text-left sm:text-right">
-                      <p className="text-2xl font-black text-green-800">₹ {totalVal.toLocaleString('en-IN')}</p>
-                      <p className="text-xs text-slate-500 font-medium">Net Qtl: {p.quantity} Quintals @ ₹{mspRate}/Qtl</p>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-6 space-y-6">
-                  {/* Quality Metrics Grid */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs">
-                    <div>
-                      <span className="text-slate-500 block">Quality Grade:</span>
-                      <strong className="text-slate-900 text-sm">{p.qualityGrade}</strong>
-                    </div>
-                    <div>
-                      <span className="text-slate-500 block">Moisture Level:</span>
-                      <strong className="text-slate-900 text-sm">{p.moistureLevel || 11.5}%</strong>
-                    </div>
-                    <div>
-                      <span className="text-slate-500 block">Payment Status:</span>
-                      <strong className="text-blue-700 text-sm">{p.paymentStatus}</strong>
-                    </div>
-                    <div>
-                      <span className="text-slate-500 block">Verification Date:</span>
-                      <strong className="text-slate-900 text-sm">{new Date(p.createdAt).toLocaleDateString()}</strong>
-                    </div>
-                  </div>
+        procurementsData.map((item) => (
+          <Card key={item.id} className="bg-white shadow-sm border-slate-200 overflow-hidden">
+            <CardHeader className="bg-slate-50 border-b flex flex-row justify-between items-center py-4">
+              <div>
+                <span className="bg-green-800 text-yellow-400 text-xs font-black px-2.5 py-0.5 rounded uppercase">{item.tokenNumber}</span>
+                <CardTitle className="text-lg font-bold text-slate-900 mt-1">{item.crop} - {item.quantity} Qtl</CardTitle>
+                <CardDescription className="text-xs text-slate-500">{item.centreName} • {item.date}</CardDescription>
+              </div>
+              <span className="bg-green-100 text-green-800 text-xs font-bold px-3 py-1 rounded-full border border-green-300">
+                {tProcurement('procurementApproved')}
+              </span>
+            </CardHeader>
 
-                  {/* Visual Pipeline Progress */}
-                  <div>
-                    <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">Procurement & Payment Lifecycle</h4>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
-                      {[
-                        { label: "1. Slot Booked", done: true },
-                        { label: "2. Arrived & Weighed", done: true },
-                        { label: "3. Quality Approved", done: true },
-                        { label: "4. DBT Payment Disbursed", done: p.paymentStatus === 'COMPLETED' || p.paymentStatus === 'SUCCESS' }
-                      ].map((step, i) => (
-                        <div key={i} className={`p-2.5 rounded-lg border font-bold ${
-                          step.done ? 'bg-green-100 text-green-900 border-green-300' : 'bg-slate-100 text-slate-400 border-slate-200'
-                        }`}>
-                          {step.done ? '✓ ' : ''}{step.label}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+            <CardContent className="pt-6 space-y-6">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+                <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                  <p className="text-[10px] text-slate-400 font-bold uppercase">{tProcurement('netQtl')}</p>
+                  <p className="text-xl font-black text-slate-900">{item.quantity} Qtl</p>
+                </div>
+                <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                  <p className="text-[10px] text-slate-400 font-bold uppercase">{tProcurement('qualityGrade')}</p>
+                  <p className="text-xl font-black text-green-800">{item.grade}</p>
+                </div>
+                <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                  <p className="text-[10px] text-slate-400 font-bold uppercase">{tProcurement('moistureLevel')}</p>
+                  <p className="text-xl font-black text-amber-700">{item.moisture}%</p>
+                </div>
+                <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                  <p className="text-[10px] text-slate-400 font-bold uppercase">{tProcurement('paymentStatus')}</p>
+                  <p className="text-sm font-black text-blue-800 mt-1">{item.paymentStatus}</p>
+                </div>
+              </div>
 
-                  {p.remarks && (
-                    <div className="text-xs text-slate-600 bg-yellow-50/70 p-3 rounded-lg border border-yellow-200">
-                      <strong>Inspector Remarks:</strong> {p.remarks}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )
-          })}
-        </div>
+              <div className="border-t pt-4">
+                <h4 className="text-xs font-bold text-slate-700 uppercase mb-2">{tProcurement('lifecycleTitle')}</h4>
+                <div className="flex flex-wrap gap-2 text-xs">
+                  <span className="bg-green-50 text-green-800 font-semibold px-2.5 py-1 rounded border border-green-200">{tProcurement('stepSlotBooked')}</span>
+                  <span className="bg-green-50 text-green-800 font-semibold px-2.5 py-1 rounded border border-green-200">{tProcurement('stepArrived')}</span>
+                  <span className="bg-green-50 text-green-800 font-semibold px-2.5 py-1 rounded border border-green-200">{tProcurement('stepQualityApproved')}</span>
+                  <span className="bg-yellow-50 text-yellow-800 font-semibold px-2.5 py-1 rounded border border-yellow-300">{tProcurement('stepDbtDisbursed')}</span>
+                </div>
+              </div>
+
+              <div className="bg-slate-50 p-3 rounded-lg border text-xs text-slate-600">
+                <strong>{tProcurement('inspectorRemarks')}:</strong> {item.remarks}
+              </div>
+            </CardContent>
+          </Card>
+        ))
       )}
     </div>
   )

@@ -1,12 +1,10 @@
 import PublicHeader from "@/components/PublicHeader";
 import PublicFooter from "@/components/PublicFooter";
 import { auth } from "@/auth";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import { Button } from "@/components/ui/button";
 import { translateCentre, translateState } from "@/lib/translateEntity";
 import Link from "next/link";
-
-const prisma = new PrismaClient();
 
 export default async function CentresPage({ params, searchParams }: { params: Promise<{ locale: string }>, searchParams: Promise<{ query?: string, state?: string }> }) {
   const { locale } = await params;

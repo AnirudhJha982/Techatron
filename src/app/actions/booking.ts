@@ -1,10 +1,8 @@
 "use server"
 
-import { PrismaClient } from '@prisma/client'
+import { prisma } from "@/lib/prisma"
 import { auth } from '@/auth'
 import { revalidatePath } from 'next/cache'
-
-const prisma = new PrismaClient()
 
 export async function getCentres() {
   return await prisma.procurementCentre.findMany({
@@ -14,20 +12,13 @@ export async function getCentres() {
 }
 
 export async function getSlots(centreId: string, dateStr: string) {
-  // Find slots for a centre on a given date string (YYYY-MM-DD)
-  const startDate = new Date(dateStr)
-  startDate.setHours(0,0,0,0)
-  
-  const endDate = new Date(startDate)
-  endDate.setDate(endDate.getDate() + 1)
+  const dateObj = new Date(dateStr)
+  dateObj.setHours(0, 0, 0, 0)
 
   const slots = await prisma.slot.findMany({
     where: {
       centreId,
-      date: {
-        gte: startDate,
-        lt: endDate
-      }
+      date: dateObj
     },
     include: {
       _count: {
@@ -36,48 +27,56 @@ export async function getSlots(centreId: string, dateStr: string) {
     }
   })
 
-  return slots.map(slot => ({
-    id: slot.id,
-    timeSlot: slot.timeSlot,
-    capacity: slot.capacity,
-    booked: slot._count.bookings,
-    available: slot.capacity - slot._count.bookings
+  return slots.map(s => ({
+    id: s.id,
+    timeSlot: s.timeSlot,
+    capacity: s.capacity,
+    booked: s._count.bookings,
+    available: s.capacity - s._count.bookings
   }))
 }
 
 export async function createBooking(slotId: string, centreId: string, dateStr: string) {
   const session = await auth()
-  if (!session || session.user.role !== 'FARMER') throw new Error("Unauthorized")
+  if (!session || !session.user) {
+    throw new Error("Unauthorized. Please login first.")
+  }
 
   const farmerProfile = await prisma.farmerProfile.findUnique({
     where: { userId: session.user.id }
   })
 
-  if (!farmerProfile) throw new Error("Farmer profile not found")
+  if (!farmerProfile) {
+    throw new Error("Farmer profile not found.")
+  }
 
-  const date = new Date(dateStr)
-  date.setHours(0,0,0,0)
+  const dateObj = new Date(dateStr)
+  dateObj.setHours(0,0,0,0)
 
-  // Generate Token Number e.g. A-042
-  const totalBookings = await prisma.booking.count({
-    where: { centreId, date }
+  // Generate Token Number e.g. TKN-8472
+  const randomNum = Math.floor(100 + Math.random() * 900)
+  const tokenNumber = `TKN-${randomNum}`
+
+  // Count existing bookings for queue position
+  const existingCount = await prisma.booking.count({
+    where: { centreId, date: dateObj }
   })
-  
-  const tokenNumber = `TKN-${centreId.substring(0, 3).toUpperCase()}-${(totalBookings + 1).toString().padStart(3, '0')}`
-  const queuePosition = totalBookings + 1
 
   const booking = await prisma.booking.create({
     data: {
       farmerId: farmerProfile.id,
       centreId,
       slotId,
-      date,
+      date: dateObj,
       tokenNumber,
-      queuePosition,
-      status: 'SCHEDULED'
+      queuePosition: existingCount + 1,
+      status: "ARRIVED"
     }
   })
 
   revalidatePath('/farmer/dashboard')
+  revalidatePath('/farmer/booking')
+  revalidatePath('/farmer/queue')
+
   return booking
 }

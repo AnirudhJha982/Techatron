@@ -2,11 +2,9 @@ import { auth, signOut } from "@/auth"
 import { redirect } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { prisma } from "@/lib/prisma"
 import LanguageSwitcher from "@/components/LanguageSwitcher"
-import { PrismaClient } from "@prisma/client"
 import { getTranslations } from 'next-intl/server'
-
-const prisma = new PrismaClient()
 
 export default async function WorkerLayout({
   children,

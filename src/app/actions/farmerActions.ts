@@ -1,11 +1,8 @@
 "use server"
 
-import { PrismaClient } from "@prisma/client"
+import { prisma } from "@/lib/prisma"
 import { auth } from "@/auth"
 import { revalidatePath } from "next/cache"
-import { redirect } from "next/navigation"
-
-const prisma = new PrismaClient()
 
 export async function createGrievanceAction(category: string, description: string) {
   const session = await auth()

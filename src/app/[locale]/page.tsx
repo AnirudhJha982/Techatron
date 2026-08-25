@@ -4,10 +4,8 @@ import { Button } from "@/components/ui/button";
 import PublicHeader from "@/components/PublicHeader";
 import PublicFooter from "@/components/PublicFooter";
 import { auth } from "@/auth";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import { translateCentre, translateState } from "@/lib/translateEntity";
-
-const prisma = new PrismaClient();
 
 export default async function LandingPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;

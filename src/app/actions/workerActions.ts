@@ -1,10 +1,8 @@
 "use server"
 
-import { PrismaClient } from "@prisma/client"
+import { prisma } from "@/lib/prisma"
 import { auth } from "@/auth"
 import { revalidatePath } from "next/cache"
-
-const prisma = new PrismaClient()
 
 export async function updateQueueStatusAction(bookingId: string, status: string) {
   return updateBookingStatusAction(bookingId, status)

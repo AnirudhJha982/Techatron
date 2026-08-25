@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { connectToDatabase } from "@/lib/mongodb"
 import { FarmerProfile, Booking, Procurement, Notification, ProcurementCentre, Slot } from "@/models"
+import mongoose from "mongoose"
 
 export default async function FarmerDashboard({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params
@@ -11,7 +12,9 @@ export default async function FarmerDashboard({ params }: { params: Promise<{ lo
 
   await connectToDatabase()
 
-  const farmerProfile = await FarmerProfile.findOne({ userId: session?.user.id })
+  const farmerProfile = (session?.user?.id && mongoose.Types.ObjectId.isValid(session.user.id))
+    ? await FarmerProfile.findOne({ userId: session.user.id })
+    : null
 
   // Active Booking
   let activeBookingData: any = null
@@ -51,10 +54,12 @@ export default async function FarmerDashboard({ params }: { params: Promise<{ lo
   }
 
   // Recent Notifications
-  const rawNotifications = await Notification.find({ userId: session?.user.id })
-    .sort({ createdAt: -1 })
-    .limit(3)
-    .lean()
+  const rawNotifications = (session?.user?.id && mongoose.Types.ObjectId.isValid(session.user.id))
+    ? await Notification.find({ userId: session.user.id })
+        .sort({ createdAt: -1 })
+        .limit(3)
+        .lean()
+    : []
 
   const notifications = rawNotifications.map(n => ({
     id: n._id.toString(),

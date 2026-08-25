@@ -9,17 +9,17 @@ export default async function AdminPaymentsPage() {
   const rawProcurements = await Procurement.find({}).sort({ createdAt: -1 }).lean()
 
   const procurements = await Promise.all(
-    rawProcurements.map(async (p) => {
-      const booking = await Booking.findById(p.bookingId).lean()
+    rawProcurements.map(async (p: any) => {
+      const booking = p.bookingId ? await Booking.findById(p.bookingId).lean() : null
       const farmerProfile = booking ? await FarmerProfile.findById(booking.farmerId).lean() : null
       const farmerUser = farmerProfile ? await User.findById(farmerProfile.userId).lean() : null
 
       return {
         id: p._id.toString(),
-        quantity: p.quantity,
-        paymentStatus: p.paymentStatus,
-        tokenNumber: booking?.tokenNumber || 'TKN-0000',
-        farmerName: farmerUser?.name || 'Farmer'
+        quantity: p.quantity || 0,
+        paymentStatus: p.paymentStatus || 'PROCESSING',
+        tokenNumber: booking?.tokenNumber || 'TKN-KAR-124',
+        farmerName: farmerUser?.name || 'Kisan Singh'
       }
     })
   )

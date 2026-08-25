@@ -4,6 +4,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { connectToDatabase } from "@/lib/mongodb"
 import { Notification } from "@/models"
+import mongoose from "mongoose"
 import LanguageSwitcher from "@/components/LanguageSwitcher"
 import { getTranslations } from 'next-intl/server'
 
@@ -27,7 +28,10 @@ export default async function FarmerLayout({
 
   // Unread notifications count from MongoDB
   await connectToDatabase()
-  const unreadCount = await Notification.countDocuments({ userId: session.user.id, isRead: false })
+  let unreadCount = 0
+  if (session?.user?.id && mongoose.Types.ObjectId.isValid(session.user.id)) {
+    unreadCount = await Notification.countDocuments({ userId: session.user.id, isRead: false })
+  }
 
   const navItems = [
     { label: tFarmer('dashboard'), href: `/${locale}/farmer/dashboard`, icon: "📊" },

@@ -4,6 +4,7 @@ import { WorkerProfile, ProcurementCentre, Booking, FarmerProfile, User, Slot, P
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
+import mongoose from "mongoose"
 
 export default async function WorkerDashboardPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params
@@ -11,7 +12,10 @@ export default async function WorkerDashboardPage({ params }: { params: Promise<
 
   await connectToDatabase()
 
-  const workerProfile = await WorkerProfile.findOne({ userId: session?.user.id })
+  const workerProfile = (session?.user?.id && mongoose.Types.ObjectId.isValid(session.user.id))
+    ? await WorkerProfile.findOne({ userId: session.user.id })
+    : null
+
   const centre = workerProfile ? await ProcurementCentre.findById(workerProfile.centreId).lean() : null
 
   if (!workerProfile || !centre) {
@@ -172,7 +176,7 @@ export default async function WorkerDashboardPage({ params }: { params: Promise<
                         {b.status !== 'COMPLETED' && (
                           <Link href={`/${locale}/worker/procurement?bookingId=${b.id}`}>
                             <Button size="sm" className="bg-green-800 hover:bg-green-700 text-white font-bold text-[11px] h-7">
-                              Process Produce ⚖️
+                              Process Produce 秤️
                             </Button>
                           </Link>
                         )}

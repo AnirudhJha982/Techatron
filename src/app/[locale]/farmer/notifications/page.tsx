@@ -4,6 +4,7 @@ import { Notification } from "@/models"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { markNotificationReadAction } from "@/app/actions/farmerActions"
+import mongoose from "mongoose"
 
 export default async function FarmerNotificationsPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params
@@ -11,9 +12,11 @@ export default async function FarmerNotificationsPage({ params }: { params: Prom
 
   await connectToDatabase()
 
-  const rawNotifications = await Notification.find({ userId: session?.user.id })
-    .sort({ createdAt: -1 })
-    .lean()
+  const rawNotifications = (session?.user?.id && mongoose.Types.ObjectId.isValid(session.user.id))
+    ? await Notification.find({ userId: session.user.id })
+        .sort({ createdAt: -1 })
+        .lean()
+    : []
 
   const notifications = rawNotifications.map(n => ({
     id: n._id.toString(),

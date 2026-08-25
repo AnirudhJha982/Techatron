@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { createGrievanceAction } from "@/app/actions/farmerActions"
+import mongoose from "mongoose"
 
 export default async function FarmerGrievancesPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params
@@ -12,9 +13,11 @@ export default async function FarmerGrievancesPage({ params }: { params: Promise
 
   await connectToDatabase()
 
-  const rawGrievances = await Grievance.find({ userId: session?.user.id })
-    .sort({ createdAt: -1 })
-    .lean()
+  const rawGrievances = (session?.user?.id && mongoose.Types.ObjectId.isValid(session.user.id))
+    ? await Grievance.find({ userId: session.user.id })
+        .sort({ createdAt: -1 })
+        .lean()
+    : []
 
   const grievances = rawGrievances.map(g => ({
     id: g._id.toString(),

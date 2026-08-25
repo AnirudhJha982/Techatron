@@ -4,6 +4,7 @@ import { FarmerProfile, Booking, ProcurementCentre, Slot } from "@/models"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
+import mongoose from "mongoose"
 
 export default async function FarmerTokenPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params
@@ -11,7 +12,9 @@ export default async function FarmerTokenPage({ params }: { params: Promise<{ lo
 
   await connectToDatabase()
 
-  const farmerProfile = await FarmerProfile.findOne({ userId: session?.user.id })
+  const farmerProfile = (session?.user?.id && mongoose.Types.ObjectId.isValid(session.user.id))
+    ? await FarmerProfile.findOne({ userId: session.user.id })
+    : null
 
   let activeBookingData: any = null
   if (farmerProfile) {

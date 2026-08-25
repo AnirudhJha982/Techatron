@@ -2,6 +2,7 @@ import { auth } from "@/auth"
 import { connectToDatabase } from "@/lib/mongodb"
 import { FarmerProfile, Booking, Procurement, ProcurementCentre } from "@/models"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import mongoose from "mongoose"
 
 export default async function FarmerPaymentsPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params
@@ -9,7 +10,9 @@ export default async function FarmerPaymentsPage({ params }: { params: Promise<{
 
   await connectToDatabase()
 
-  const farmerProfile = await FarmerProfile.findOne({ userId: session?.user.id })
+  const farmerProfile = (session?.user?.id && mongoose.Types.ObjectId.isValid(session.user.id))
+    ? await FarmerProfile.findOne({ userId: session.user.id })
+    : null
 
   let procurementsData: any[] = []
   if (farmerProfile) {

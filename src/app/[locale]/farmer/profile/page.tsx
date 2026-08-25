@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { updateFarmerProfileAction } from "@/app/actions/farmerActions"
+import mongoose from "mongoose"
 
 export default async function FarmerProfilePage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params
@@ -13,7 +14,10 @@ export default async function FarmerProfilePage({ params }: { params: Promise<{ 
 
   await connectToDatabase()
 
-  const user = session?.user?.id ? await User.findById(session.user.id).lean() : null
+  const user = (session?.user?.id && mongoose.Types.ObjectId.isValid(session.user.id))
+    ? await User.findById(session.user.id).lean()
+    : null
+
   const farmerProfile = user ? await FarmerProfile.findOne({ userId: user._id }).lean() : null
 
   return (

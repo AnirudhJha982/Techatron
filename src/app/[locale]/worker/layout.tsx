@@ -4,6 +4,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { connectToDatabase } from "@/lib/mongodb"
 import { WorkerProfile, ProcurementCentre } from "@/models"
+import mongoose from "mongoose"
 import LanguageSwitcher from "@/components/LanguageSwitcher"
 import { getTranslations } from 'next-intl/server'
 
@@ -26,8 +27,14 @@ export default async function WorkerLayout({
   const tCommon = await getTranslations({ locale, namespace: 'Common' })
 
   await connectToDatabase()
-  const workerProfile = await WorkerProfile.findOne({ userId: session.user.id })
-  const centre = workerProfile ? await ProcurementCentre.findById(workerProfile.centreId).lean() : null
+  let workerProfile = null
+  let centre = null
+  if (session?.user?.id && mongoose.Types.ObjectId.isValid(session.user.id)) {
+    workerProfile = await WorkerProfile.findOne({ userId: session.user.id })
+    if (workerProfile?.centreId && mongoose.Types.ObjectId.isValid(workerProfile.centreId)) {
+      centre = await ProcurementCentre.findById(workerProfile.centreId).lean()
+    }
+  }
 
   const navItems = [
     { label: tWorker('dashboard'), href: `/${locale}/worker/dashboard`, icon: "📊" },

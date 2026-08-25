@@ -36,8 +36,12 @@ export default function BookingWizardPage() {
 
   useEffect(() => {
     getCentres().then(data => {
-      setCentres(data)
-      if (data.length > 0) setSelectedCentre(data[0])
+      if (Array.isArray(data)) {
+        setCentres(data)
+        if (data.length > 0) setSelectedCentre(data[0])
+      }
+    }).catch(err => {
+      console.error("Error loading centres:", err)
     })
   }, [])
 
@@ -45,8 +49,14 @@ export default function BookingWizardPage() {
     if (selectedCentre && selectedDate) {
       setLoading(true)
       getSlots(selectedCentre.id, selectedDate).then(fetchedSlots => {
-        setSlots(fetchedSlots)
-        if (fetchedSlots.length > 0) setSelectedSlot(fetchedSlots[0])
+        if (Array.isArray(fetchedSlots)) {
+          setSlots(fetchedSlots)
+          if (fetchedSlots.length > 0) setSelectedSlot(fetchedSlots[0])
+        }
+        setLoading(false)
+      }).catch(err => {
+        console.error("Error loading slots:", err)
+        setSlots([])
         setLoading(false)
       })
     }
@@ -250,7 +260,7 @@ export default function BookingWizardPage() {
               <div className="bg-gradient-to-br from-green-900 via-green-850 to-green-950 text-white p-8 rounded-2xl border-4 border-yellow-400 max-w-md mx-auto shadow-xl text-left relative overflow-hidden">
                 <div className="flex justify-between items-center mb-4">
                   <span className="bg-yellow-400 text-green-950 text-[10px] font-black px-2.5 py-0.5 rounded uppercase">Govt Digital Pass</span>
-                  <span className="text-xs text-green-200">Ref #{bookingResult.id.slice(-6)}</span>
+                  <span className="text-xs text-green-200">Ref #{bookingResult._id ? bookingResult._id.slice(-6) : '000000'}</span>
                 </div>
 
                 <div className="text-center py-4 border-y border-green-800 my-4">

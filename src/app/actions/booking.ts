@@ -6,33 +6,70 @@ import { auth } from '@/auth'
 import { revalidatePath } from 'next/cache'
 
 export async function getCentres() {
-  await connectToDatabase()
-  const centres = await ProcurementCentre.find({ isActive: true }).lean()
-  return centres.map(c => ({
-    id: c._id.toString(),
-    name: c.name,
-    district: c.district,
-    state: c.state
-  }))
+  try {
+    await connectToDatabase()
+    const centres = await ProcurementCentre.find({ isActive: true }).lean()
+    return centres.map(c => ({
+      id: c._id.toString(),
+      name: c.name,
+      district: c.district,
+      state: c.state,
+      address: c.address,
+      capacityPerDay: c.capacityPerDay || 500
+    }))
+  } catch (err) {
+    console.error("Error in getCentres:", err)
+    return []
+  }
 }
 
 export async function getSlots(centreId: string, dateStr: string) {
-  await connectToDatabase()
-  const dateObj = new Date(dateStr)
-  dateObj.setHours(0, 0, 0, 0)
+  try {
+    await connectToDatabase()
+    const dateObj = new Date(dateStr)
+    dateObj.setHours(0, 0, 0, 0)
 
-  const slots = await Slot.find({
-    centreId,
-    date: dateObj
-  }).lean()
+    let slots = await Slot.find({
+      centreId,
+      date: dateObj
+    }).lean()
 
-  return slots.map(s => ({
-    id: s._id.toString(),
-    timeSlot: s.timeSlot,
-    capacity: s.capacity,
-    booked: s.bookedCount,
-    available: Math.max(0, s.capacity - s.bookedCount)
-  }))
+    // Auto-provision standard time slots if none exist for the selected date
+    if (!slots || slots.length === 0) {
+      const defaultSlots = [
+        { timeSlot: '08:00 AM - 10:00 AM', capacity: 30, bookedCount: 0 },
+        { timeSlot: '10:00 AM - 12:00 PM', capacity: 35, bookedCount: 0 },
+        { timeSlot: '01:00 PM - 03:00 PM', capacity: 35, bookedCount: 0 },
+        { timeSlot: '03:00 PM - 05:00 PM', capacity: 25, bookedCount: 0 }
+      ]
+
+      for (const s of defaultSlots) {
+        await Slot.create({
+          centreId,
+          date: dateObj,
+          timeSlot: s.timeSlot,
+          capacity: s.capacity,
+          bookedCount: s.bookedCount
+        })
+      }
+
+      slots = await Slot.find({
+        centreId,
+        date: dateObj
+      }).lean()
+    }
+
+    return slots.map(s => ({
+      id: s._id.toString(),
+      timeSlot: s.timeSlot,
+      capacity: s.capacity,
+      booked: s.bookedCount,
+      available: Math.max(0, s.capacity - s.bookedCount)
+    }))
+  } catch (err) {
+    console.error("Error in getSlots:", err)
+    return []
+  }
 }
 
 export async function createBooking(slotId: string, centreId: string, dateStr: string) {

@@ -35,7 +35,7 @@ import {
 import bcrypt from 'bcryptjs'
 
 async function seed() {
-  console.log('Seeding MongoDB database with demonstration accounts and procurement data...')
+  console.log('Seeding MongoDB database with 10 Farmers, 5 Workers, and 5 Admins...')
   await connectToDatabase()
 
   // Clear existing collections
@@ -54,21 +54,7 @@ async function seed() {
 
   const passwordHash = bcrypt.hashSync('password123', 10)
 
-  // 1. Admins
-  const adminUser = await User.create({
-    name: 'Rajesh Kumar (HQ Procurement Officer)',
-    phoneNumber: '9876543212',
-    passwordHash,
-    role: 'ADMIN',
-    language: 'en'
-  })
-
-  await AdminProfile.create({
-    userId: adminUser._id,
-    department: 'Department of Agricultural Procurement, Govt of India'
-  })
-
-  // 2. Procurement Centres
+  // 1. Procurement Centres (5 Centres)
   const centreKarnal = await ProcurementCentre.create({
     name: 'Mandi Samiti - Karnal Main',
     state: 'Haryana',
@@ -87,7 +73,7 @@ async function seed() {
     isActive: true
   })
 
-  await ProcurementCentre.create({
+  const centreKota = await ProcurementCentre.create({
     name: 'Krishi Upaj Mandi - Kota Central',
     state: 'Rajasthan',
     district: 'Kota',
@@ -96,7 +82,7 @@ async function seed() {
     isActive: true
   })
 
-  await ProcurementCentre.create({
+  const centreNashik = await ProcurementCentre.create({
     name: 'APMC Mandi - Nashik Road',
     state: 'Maharashtra',
     district: 'Nashik',
@@ -105,7 +91,7 @@ async function seed() {
     isActive: true
   })
 
-  await ProcurementCentre.create({
+  const centreBareilly = await ProcurementCentre.create({
     name: 'Mandi Parishad - Bareilly City',
     state: 'Uttar Pradesh',
     district: 'Bareilly',
@@ -114,56 +100,93 @@ async function seed() {
     isActive: true
   })
 
-  // 3. Worker User
-  const workerUser = await User.create({
-    name: 'Suresh Verma (Supervisor)',
-    phoneNumber: '9876543211',
-    passwordHash,
-    role: 'WORKER',
-    language: 'hi'
-  })
+  const centres = [centreKarnal, centreLudhiana, centreKota, centreNashik, centreBareilly]
 
-  const workerProfile = await WorkerProfile.create({
-    userId: workerUser._id,
-    centreId: centreKarnal._id
-  })
+  // 2. Administrators (5 Admins)
+  const adminData = [
+    { name: 'Rajesh Kumar (HQ Procurement Officer)', phone: '9876543212', dept: 'HQ Agricultural Procurement' },
+    { name: 'Sunil Grover (Deputy Commissioner)', phone: '9876543231', dept: 'State Operations & Monitoring' },
+    { name: 'Pooja Sharma (Chief Financial Auditor)', phone: '9876543232', dept: 'DBT Payment Disbursal Cell' },
+    { name: 'Vikramaditya Roy (Director APMC)', phone: '9876543233', dept: 'Market Intelligence & Mandi Board' },
+    { name: 'Anita Deshpande (Systems Lead)', phone: '9876543234', dept: 'National AgTech IT Infrastructure' }
+  ]
 
-  // 4. Farmer Users
-  const farmer1User = await User.create({
-    name: 'Ramesh Singh',
-    phoneNumber: '9876543210',
-    passwordHash,
-    role: 'FARMER',
-    language: 'hi'
-  })
+  const adminUsers = []
+  for (const a of adminData) {
+    const user = await User.create({
+      name: a.name,
+      phoneNumber: a.phone,
+      passwordHash,
+      role: 'ADMIN',
+      language: 'en'
+    })
+    await AdminProfile.create({
+      userId: user._id,
+      department: a.dept
+    })
+    adminUsers.push(user)
+  }
 
-  const farmer1Profile = await FarmerProfile.create({
-    userId: farmer1User._id,
-    address: 'House 42, Village Nilokheri',
-    village: 'Nilokheri',
-    district: 'Karnal',
-    state: 'Haryana',
-    landSizeAcres: 8.5
-  })
+  // 3. Workers / Supervisors (5 Workers - 1 per centre)
+  const workerData = [
+    { name: 'Suresh Verma (Supervisor)', phone: '9876543211', centreId: centreKarnal._id, lang: 'hi' },
+    { name: 'Harminder Singh (Supervisor)', phone: '9876543221', centreId: centreLudhiana._id, lang: 'pa' },
+    { name: 'Mukesh Meena (Supervisor)', phone: '9876543222', centreId: centreKota._id, lang: 'hi' },
+    { name: 'Ganesh Shinde (Supervisor)', phone: '9876543223', centreId: centreNashik._id, lang: 'mr' },
+    { name: 'Rakesh Gangwar (Supervisor)', phone: '9876543224', centreId: centreBareilly._id, lang: 'hi' }
+  ]
 
-  const farmer2User = await User.create({
-    name: 'Gurpreet Singh',
-    phoneNumber: '9876543219',
-    passwordHash,
-    role: 'FARMER',
-    language: 'pa'
-  })
+  const workerProfiles = []
+  for (const w of workerData) {
+    const user = await User.create({
+      name: w.name,
+      phoneNumber: w.phone,
+      passwordHash,
+      role: 'WORKER',
+      language: w.lang
+    })
+    const profile = await WorkerProfile.create({
+      userId: user._id,
+      centreId: w.centreId
+    })
+    workerProfiles.push(profile)
+  }
 
-  const farmer2Profile = await FarmerProfile.create({
-    userId: farmer2User._id,
-    address: 'Pind Jagraon, District Ludhiana',
-    village: 'Jagraon',
-    district: 'Ludhiana',
-    state: 'Punjab',
-    landSizeAcres: 12.0
-  })
+  // 4. Farmers (10 Farmers)
+  const farmerData = [
+    { name: 'Ramesh Singh', phone: '9876543210', village: 'Nilokheri', district: 'Karnal', state: 'Haryana', acres: 8.5, lang: 'hi' },
+    { name: 'Gurpreet Singh', phone: '9876543201', village: 'Jagraon', district: 'Ludhiana', state: 'Punjab', acres: 12.0, lang: 'pa' },
+    { name: 'Baldev Sharma', phone: '9876543202', village: 'Ladwa', district: 'Kurukshetra', state: 'Haryana', acres: 6.0, lang: 'hi' },
+    { name: 'Harpreet Dhillon', phone: '9876543203', village: 'Khanna', district: 'Ludhiana', state: 'Punjab', acres: 15.5, lang: 'pa' },
+    { name: 'Ramotar Yadav', phone: '9876543204', village: 'Ramganj', district: 'Kota', state: 'Rajasthan', acres: 5.0, lang: 'hi' },
+    { name: 'Vikas Patil', phone: '9876543205', village: 'Niphad', district: 'Nashik', state: 'Maharashtra', acres: 9.2, lang: 'mr' },
+    { name: 'Satish Verma', phone: '9876543206', village: 'Nawabganj', district: 'Bareilly', state: 'Uttar Pradesh', acres: 7.0, lang: 'hi' },
+    { name: 'Manjeet Kaur', phone: '9876543207', village: 'Samrala', district: 'Ludhiana', state: 'Punjab', acres: 10.0, lang: 'pa' },
+    { name: 'Devendra Choudhary', phone: '9876543208', village: 'Sangod', district: 'Kota', state: 'Rajasthan', acres: 4.5, lang: 'hi' },
+    { name: 'Anil Deshmukh', phone: '9876543209', village: 'Dindori', district: 'Nashik', state: 'Maharashtra', acres: 11.0, lang: 'mr' }
+  ]
 
-  // 5. Time Slots
+  const farmerProfiles = []
+  for (const f of farmerData) {
+    const user = await User.create({
+      name: f.name,
+      phoneNumber: f.phone,
+      passwordHash,
+      role: 'FARMER',
+      language: f.lang
+    })
+    const profile = await FarmerProfile.create({
+      userId: user._id,
+      address: `Village ${f.village}, ${f.district}, ${f.state}`,
+      village: f.village,
+      district: f.district,
+      state: f.state,
+      landSizeAcres: f.acres
+    })
+    farmerProfiles.push(profile)
+  }
+
+  // 5. Time Slots for Centres
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
@@ -175,29 +198,22 @@ async function seed() {
   ]
 
   const createdSlots = []
-  for (const s of slotsData) {
-    const slot = await Slot.create({
-      centreId: centreKarnal._id,
-      date: today,
-      timeSlot: s.timeSlot,
-      capacity: s.capacity,
-      bookedCount: s.bookedCount
-    })
-    createdSlots.push(slot)
-
-    // Also seed slots for Ludhiana
-    await Slot.create({
-      centreId: centreLudhiana._id,
-      date: today,
-      timeSlot: s.timeSlot,
-      capacity: s.capacity,
-      bookedCount: 0
-    })
+  for (const c of centres) {
+    for (const s of slotsData) {
+      const slot = await Slot.create({
+        centreId: c._id,
+        date: today,
+        timeSlot: s.timeSlot,
+        capacity: s.capacity,
+        bookedCount: s.bookedCount
+      })
+      createdSlots.push(slot)
+    }
   }
 
-  // 6. Bookings
+  // 6. Seed Sample Bookings & Procurements
   const booking1 = await Booking.create({
-    farmerId: farmer1Profile._id,
+    farmerId: farmerProfiles[0]._id,
     centreId: centreKarnal._id,
     slotId: createdSlots[1]._id,
     date: today,
@@ -207,9 +223,9 @@ async function seed() {
   })
 
   const booking2 = await Booking.create({
-    farmerId: farmer2Profile._id,
+    farmerId: farmerProfiles[1]._id,
     centreId: centreLudhiana._id,
-    slotId: createdSlots[0]._id,
+    slotId: createdSlots[4]._id,
     date: today,
     tokenNumber: 'TKN-1094',
     queuePosition: 2,
@@ -219,7 +235,7 @@ async function seed() {
   // 7. Procurements & Payments
   const procurement2 = await Procurement.create({
     bookingId: booking2._id,
-    workerId: workerProfile._id,
+    workerId: workerProfiles[1]._id,
     crop: 'Wheat (Sharbati)',
     quantity: 45.5,
     qualityGrade: 'Grade A',
@@ -231,7 +247,7 @@ async function seed() {
 
   await Payment.create({
     procurementId: procurement2._id,
-    farmerId: farmer2Profile._id,
+    farmerId: farmerProfiles[1]._id,
     amount: 103512.5,
     mspRatePerQuintal: 2275.0,
     bankAccountMasked: 'XXXX-XXXX-4892',
@@ -243,38 +259,21 @@ async function seed() {
 
   // 8. Notifications
   await Notification.create({
-    userId: farmer1User._id,
+    userId: farmerProfiles[0].userId,
     title: 'Token Generated Successfully',
     message: 'Your token pass TKN-8472 for Mandi Samiti - Karnal Main has been generated.',
     category: 'TOKEN',
     isRead: false
   })
 
-  await Notification.create({
-    userId: farmer2User._id,
-    title: 'Payment Credited',
-    message: 'Payment of ₹103,512.50 for Procurement #TXN-9847102948 has been credited to your bank account.',
-    category: 'PAYMENT',
-    isRead: true
-  })
-
-  // 9. Grievances
-  await Grievance.create({
-    userId: farmer1User._id,
-    category: 'Slot Availability',
-    description: 'Requested additional morning slots during peak harvest week.',
-    status: 'UNDER_REVIEW',
-    response: 'Mandi supervisor is reviewing capacity addition.'
-  })
-
-  // 10. Audit Logs
+  // 9. Audit Logs
   await AuditLog.create({
-    userId: adminUser._id,
+    userId: adminUsers[0]._id,
     action: 'SYSTEM_INITIALIZATION',
-    details: 'MongoDB database initialized with seed data.'
+    details: 'MongoDB database seeded with 10 Farmers, 5 Workers, and 5 Administrators.'
   })
 
-  console.log('✅ MongoDB Seeding completed successfully!')
+  console.log('✅ MongoDB Seeding completed! (10 Farmers, 5 Workers, 5 Administrators created)')
   process.exit(0)
 }
 

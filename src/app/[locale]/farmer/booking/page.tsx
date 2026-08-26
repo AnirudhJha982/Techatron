@@ -70,7 +70,7 @@ export default function BookingWizardPage() {
       setBookingResult(res)
       setStep(5)
     } catch (err: any) {
-      alert(err?.message || "Failed to create booking. Please try again.")
+      alert(err?.message || "Failed to create booking. Please complete farmer verification on your profile.")
     }
     setLoading(false)
   }

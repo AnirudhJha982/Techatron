@@ -104,15 +104,8 @@ export async function createBooking(slotId: string, centreId: string, dateStr: s
   await connectToDatabase()
 
   let farmerProfile = await FarmerProfile.findOne({ userId: session.user.id })
-  if (!farmerProfile) {
-    farmerProfile = await FarmerProfile.create({
-      userId: session.user.id,
-      address: "Registered Farmer Address",
-      village: "Nilokheri",
-      district: "Karnal",
-      state: "Haryana",
-      landSizeAcres: 5.0
-    })
+  if (!farmerProfile || !farmerProfile.bookingEligible || farmerProfile.kycStatus !== 'VERIFIED') {
+    throw new Error("Slot booking is restricted to verified farmers. Please complete your Farmer Verification (KYC) on your profile first.")
   }
 
   const validDate = dateStr && !isNaN(Date.parse(dateStr)) ? dateStr : new Date().toISOString().split('T')[0]

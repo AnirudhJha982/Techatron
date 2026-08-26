@@ -181,7 +181,18 @@ async function seed() {
       village: f.village,
       district: f.district,
       state: f.state,
-      landSizeAcres: f.acres
+      landSizeAcres: f.acres,
+      farmerId: `KF-${f.phone.slice(-6)}`,
+      mobileVerified: true,
+      farmerIdVerified: true,
+      kycStatus: 'VERIFIED',
+      bankAccountName: f.name,
+      bankName: 'State Bank of India',
+      bankAccountMasked: `XXXX-XXXX-${f.phone.slice(-4)}`,
+      ifscCode: 'SBIN0001245',
+      bankDetailsVerified: true,
+      bookingEligible: true,
+      verificationCompletedAt: new Date()
     })
     farmerProfiles.push(profile)
   }

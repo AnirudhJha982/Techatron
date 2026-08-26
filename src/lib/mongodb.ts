@@ -97,6 +97,41 @@ async function ensureSeedData() {
       }
     }
 
+    // Unverified Level 1 Basic Farmer Accounts (2 Accounts)
+    const unverifiedAccounts = [
+      { name: 'Sohan Lal (Unverified Basic Farmer)', phone: '9876543200', village: 'Nilokheri', district: 'Karnal', state: 'Haryana', acres: 4.0, lang: 'hi' },
+      { name: 'Kishan Kumar (Unverified Basic Farmer)', phone: '9876543299', village: 'Samrala', district: 'Ludhiana', state: 'Punjab', acres: 3.5, lang: 'pa' }
+    ]
+
+    for (const f of unverifiedAccounts) {
+      let user = await User.findOne({ phoneNumber: f.phone })
+      if (!user) {
+        user = await User.create({
+          name: f.name,
+          phoneNumber: f.phone,
+          passwordHash,
+          role: 'FARMER',
+          language: f.lang
+        })
+      }
+      const existingProfile = await FarmerProfile.findOne({ userId: user._id })
+      if (!existingProfile) {
+        await FarmerProfile.create({
+          userId: user._id,
+          address: `Village ${f.village}, ${f.district}, ${f.state}`,
+          village: f.village,
+          district: f.district,
+          state: f.state,
+          landSizeAcres: f.acres,
+          mobileVerified: true,
+          farmerIdVerified: false,
+          kycStatus: 'NOT_VERIFIED',
+          bankDetailsVerified: false,
+          bookingEligible: false
+        })
+      }
+    }
+
     // Demo Worker Accounts (5 Accounts)
     const workerAccounts = [
       { name: 'Suresh Verma (Supervisor)', phone: '9876543211' },

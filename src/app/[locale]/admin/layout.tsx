@@ -3,6 +3,7 @@ import { redirect } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import LanguageSwitcher from "@/components/LanguageSwitcher"
+import MandiMargLogo from "@/components/MandiMargLogo"
 import { getTranslations } from 'next-intl/server'
 
 export default async function AdminLayout({
@@ -48,14 +49,9 @@ export default async function AdminLayout({
       <header className="bg-slate-950 text-white shadow-lg sticky top-0 z-50 border-b border-slate-800">
         <div className="px-4 py-3 flex justify-between items-center">
           <div className="flex items-center space-x-3">
-            <Link href={`/${locale}`} className="flex items-center space-x-2">
-              <div className="w-9 h-9 bg-slate-800 rounded-full flex items-center justify-center font-black text-yellow-400 border border-slate-700 shadow">
-                🏛️
-              </div>
-              <div>
-                <h1 className="text-lg font-black tracking-tight text-white leading-tight">{tAdmin('portalName')}</h1>
-                <p className="text-[10px] text-slate-400 font-semibold">{tAdmin('nationalControl')}</p>
-              </div>
+            <Link href={`/${locale}`} className="flex items-center space-x-3">
+              <MandiMargLogo size="sm" variant="dark" />
+              <span className="text-xs text-yellow-400 font-bold bg-slate-900 px-2 py-0.5 rounded border border-slate-800">Admin Control</span>
             </Link>
           </div>
 

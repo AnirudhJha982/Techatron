@@ -31,7 +31,7 @@ export default function VoiceAssistant() {
         ? "नमस्ते! मैं आपका किसान पोर्टल वॉइस असिस्टेंट हूँ। आप मुझसे स्लॉट बुकिंग, कतार स्थिति, मंडी केंद्र या एमएसपी दरें पूछ सकते हैं।"
         : locale === 'bn'
         ? "নমস্কার! আমি আপনার কিষাণ পোর্টাল ভয়েস সহকারী। আপনি স্লট বুকিং, টোকেন স্ট্যাটাস বা এমএসপি দর জানতে চাইতে পারেন।"
-        : "Namaste! I am your Kisan Portal Voice Assistant. Ask me about slot bookings, live queue status, Mandi centres, or MSP rates."
+        : "Namaste! I am your Mandi Marg Voice Assistant. Ask me about slot bookings, live queue status, Mandi centres, or MSP rates."
     }
   ])
   const [inputQuery, setInputQuery] = useState('')

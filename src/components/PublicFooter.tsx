@@ -62,7 +62,7 @@ export default function PublicFooter() {
         </div>
 
         <div className="mt-12 pt-6 border-t border-slate-900 flex flex-col sm:flex-row justify-between items-center text-xs text-slate-500">
-          <p>© 2025 Kisan Portal — Department of Agricultural Procurement. Demonstration Platform.</p>
+          <p>© 2026 Mandi Marg — Department of Agricultural Procurement. Government Platform.</p>
           <div className="flex space-x-4 mt-4 sm:mt-0">
             <Link href="#" className="hover:underline">Privacy Policy</Link>
             <Link href="#" className="hover:underline">Terms of Service</Link>

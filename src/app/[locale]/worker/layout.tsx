@@ -6,6 +6,7 @@ import { connectToDatabase } from "@/lib/mongodb"
 import { WorkerProfile, ProcurementCentre } from "@/models"
 import mongoose from "mongoose"
 import LanguageSwitcher from "@/components/LanguageSwitcher"
+import MandiMargLogo from "@/components/MandiMargLogo"
 import { getTranslations } from 'next-intl/server'
 
 export default async function WorkerLayout({
@@ -56,14 +57,9 @@ export default async function WorkerLayout({
       <header className="bg-gradient-to-r from-amber-700 via-amber-600 to-amber-700 text-white shadow-md sticky top-0 z-50 border-b border-amber-500">
         <div className="px-4 py-3 flex justify-between items-center">
           <div className="flex items-center space-x-3">
-            <Link href={`/${locale}`} className="flex items-center space-x-2">
-              <div className="w-9 h-9 bg-green-900 rounded-full flex items-center justify-center font-black text-yellow-400 border-2 border-white shadow">
-                🏢
-              </div>
-              <div>
-                <h1 className="text-lg font-black tracking-tight text-white leading-tight">{tWorker('portalName')}</h1>
-                <p className="text-[10px] text-amber-100 font-semibold">{centre?.name || 'Procurement Centre'}</p>
-              </div>
+            <Link href={`/${locale}`} className="flex items-center space-x-3">
+              <MandiMargLogo size="sm" variant="dark" />
+              <span className="text-xs text-amber-200 font-bold bg-amber-900/60 px-2 py-0.5 rounded border border-amber-500/40">Worker Portal</span>
             </Link>
           </div>
 

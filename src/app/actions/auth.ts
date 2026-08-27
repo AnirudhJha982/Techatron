@@ -106,7 +106,7 @@ export async function registerFarmer(formData: FormData) {
   // Create Welcome Notification
   await Notification.create({
     userId: user._id,
-    title: "Welcome to Kisan Portal",
+    title: "Welcome to Mandi Marg",
     message: "Your registration as a registered farmer is complete. You can now book procurement slots.",
     category: "GENERAL"
   })

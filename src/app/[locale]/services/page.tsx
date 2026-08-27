@@ -74,7 +74,7 @@ export default async function ServicesPage({ params }: { params: Promise<{ local
 
       <main className="flex-grow py-12 container mx-auto px-4 max-w-6xl">
         <div className="text-center mb-12">
-          <h1 className="text-3xl sm:text-4xl font-black text-green-950 tracking-tight">Kisan Portal Services Overview</h1>
+          <h1 className="text-3xl sm:text-4xl font-black text-green-950 tracking-tight">Mandi Marg Services Overview</h1>
           <p className="text-gray-600 mt-2 text-lg">Complete suite of digital services for farmers, mandi staff, and agricultural administrators</p>
           <div className="w-20 h-1 bg-yellow-500 mx-auto mt-4 rounded-full"></div>
         </div>

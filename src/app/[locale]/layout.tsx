@@ -16,8 +16,14 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Kisan Portal - Digital Procurement",
-  description: "Government agricultural procurement platform for farmers",
+  title: "Mandi Marg | Digital Agricultural Procurement",
+  description: "Mandi Marg is a digital platform connecting farmers with mandis for transparent and efficient agricultural procurement.",
+  applicationName: "Mandi Marg",
+  openGraph: {
+    title: "Mandi Marg | Digital Agricultural Procurement",
+    description: "Mandi Marg is a digital platform connecting farmers with mandis for transparent and efficient agricultural procurement.",
+    siteName: "Mandi Marg"
+  }
 };
 
 export default async function RootLayout(

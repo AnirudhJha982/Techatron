@@ -1,8 +1,8 @@
 {
   "Common": {
-    "appName": "किसान पोर्टल",
+    "appName": "मंडी मार्ग (Mandi Marg)",
     "department": "कृषि खरीद विभाग",
-    "welcome": "किसान पोर्टल पर आपका स्वागत है",
+    "welcome": "मंडी मार्ग (Mandi Marg) पर आपका स्वागत है",
     "login": "लॉगिन",
     "register": "किसान पंजीकरण",
     "home": "होम",
@@ -40,7 +40,7 @@
     "registerNow": "अब किसान के रूप में पंजीकरण करें"
   },
   "Farmer": {
-    "portalName": "किसान पोर्टल",
+    "portalName": "मंडी मार्ग (Mandi Marg)",
     "dashboard": "डैशबोर्ड",
     "slotBooking": "स्लॉट बुक करें",
     "liveQueue": "लाइव कतार",

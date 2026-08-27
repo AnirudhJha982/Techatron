@@ -1,8 +1,8 @@
 {
   "Common": {
-    "appName": "Kisan Portal",
+    "appName": "Mandi Marg",
     "department": "Department of Agricultural Procurement",
-    "welcome": "Welcome to Kisan Portal",
+    "welcome": "Welcome to Mandi Marg",
     "login": "Login",
     "register": "Farmer Register",
     "home": "Home",
@@ -40,7 +40,7 @@
     "registerNow": "Register as Farmer Now"
   },
   "Farmer": {
-    "portalName": "Farmer Portal",
+    "portalName": "Mandi Marg",
     "dashboard": "Dashboard",
     "slotBooking": "Book Slot",
     "liveQueue": "Live Queue",

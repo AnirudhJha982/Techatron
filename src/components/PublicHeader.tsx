@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 import LanguageSwitcher from "./LanguageSwitcher"
+import MandiMargLogo from "./MandiMargLogo"
 
 export default function PublicHeader({ session }: { session?: any }) {
   const pathname = usePathname()
@@ -28,16 +29,7 @@ export default function PublicHeader({ session }: { session?: any }) {
       <div className="container mx-auto px-4 py-3 flex justify-between items-center">
         {/* Brand Logo */}
         <Link href={`/${locale}`} className="flex items-center space-x-3 group">
-          <div className="w-11 h-11 bg-gradient-to-br from-yellow-400 to-amber-500 rounded-full flex items-center justify-center font-black text-green-950 border-2 border-white shadow-md group-hover:scale-105 transition-transform text-xl">
-            🌾
-          </div>
-          <div>
-            <div className="flex items-center space-x-1.5">
-              <h1 className="text-xl font-black tracking-tight leading-none text-white">{t('appName')}</h1>
-              <span className="text-[10px] bg-yellow-400/20 text-yellow-300 font-bold px-1.5 py-0.5 rounded border border-yellow-400/30">GOV</span>
-            </div>
-            <p className="text-xs text-green-200 font-medium">{t('department')}</p>
-          </div>
+          <MandiMargLogo size="md" variant="dark" />
         </Link>
 
         {/* Navigation Links */}

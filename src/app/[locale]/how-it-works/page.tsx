@@ -14,7 +14,7 @@ export default async function HowItWorksPage({ params }: { params: Promise<{ loc
 
       <main className="flex-grow py-12 container mx-auto px-4 max-w-5xl">
         <div className="text-center mb-12">
-          <h1 className="text-3xl sm:text-4xl font-black text-green-950 tracking-tight">How Kisan Portal Works</h1>
+          <h1 className="text-3xl sm:text-4xl font-black text-green-950 tracking-tight">How Mandi Marg Works</h1>
           <p className="text-gray-600 mt-2 text-lg">Comprehensive step-by-step guide for farmers to book slots, track tokens, and receive MSP payments.</p>
           <div className="w-20 h-1 bg-yellow-500 mx-auto mt-4 rounded-full"></div>
         </div>

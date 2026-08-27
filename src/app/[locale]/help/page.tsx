@@ -10,8 +10,8 @@ export default async function HelpPage({ params }: { params: Promise<{ locale: s
 
   const faqs = [
     {
-      q: "What is Kisan Portal and who can use it?",
-      a: "Kisan Portal is an official digital platform built for Indian farmers to book procurement slots at government Mandis, track live token queues, and receive direct MSP payments into their bank accounts."
+      q: "What is Mandi Marg and who can use it?",
+      a: "Mandi Marg is an official digital platform built for Indian farmers to book procurement slots at government Mandis, track live token queues, and receive direct MSP payments into their bank accounts."
     },
     {
       q: "How do I book a slot for crop procurement?",

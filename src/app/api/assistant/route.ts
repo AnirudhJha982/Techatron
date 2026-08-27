@@ -14,8 +14,8 @@ import {
   GEMINI_TOOLS_SCHEMA
 } from '@/lib/assistantTools'
 
-const SYSTEM_PROMPT = `You are Kisan Portal's official agricultural procurement assistant.
-Your purpose is to help farmers interact with the Kisan Portal using natural spoken language or text.
+const SYSTEM_PROMPT = `You are Mandi Marg's official agricultural procurement assistant.
+Your purpose is to help farmers interact with Mandi Marg using natural spoken language or text.
 
 Capabilities:
 - Procurement slot booking (Wheat, Paddy, Mustard, Chana)
@@ -133,7 +133,7 @@ async function callGeminiAPI(messages: any[], locale: string, userId: string, ap
     }
   }
 
-  return { text: firstPart?.text || "Namaste! How can I assist you with Kisan Portal today?" }
+  return { text: firstPart?.text || "Namaste! How can I assist you with Mandi Marg today?" }
 }
 
 async function handleRuleBasedAssistant(input: string, locale: string, userId: string) {
@@ -204,6 +204,6 @@ async function handleRuleBasedAssistant(input: string, locale: string, userId: s
       ? "नमस्ते! मैं आपका किसान पोर्टल वॉइस असिस्टेंट हूँ। आप मुझसे स्लॉट बुकिंग, टोकन स्थिति, मंडी केंद्र, एमएसपी दरें और भुगतान की स्थिति पूछ सकते हैं।"
       : locale === 'bn'
       ? "নমস্কার! আমি আপনার কিষাণ পোর্টাল ভয়েস সহকারী। আপনি স্লট বুকিং, টোকেন স্ট্যাটাস বা এমএসপি দর জানতে চাইতে পারেন।"
-      : "Namaste! I am your Kisan Portal Voice Assistant. Ask me about slot bookings, live queue tokens, Mandi centres, MSP rates, or DBT payments."
+      : "Namaste! I am your Mandi Marg Voice Assistant. Ask me about slot bookings, live queue tokens, Mandi centres, MSP rates, or DBT payments."
   }
 }

@@ -6,6 +6,7 @@ import { connectToDatabase } from "@/lib/mongodb"
 import { Notification } from "@/models"
 import mongoose from "mongoose"
 import LanguageSwitcher from "@/components/LanguageSwitcher"
+import MandiMargLogo from "@/components/MandiMargLogo"
 import { getTranslations } from 'next-intl/server'
 
 export default async function FarmerLayout({
@@ -56,15 +57,11 @@ export default async function FarmerLayout({
       {/* Sidebar Navigation - Deep Forest Green (#0c3823) */}
       <aside className="w-full md:w-64 bg-[#0c3823] text-emerald-100 flex-shrink-0 flex flex-col justify-between border-r border-[#08291a] shadow-xl">
         <div>
-          {/* MandiSetu Branding Banner */}
-          <div className="p-5 border-b border-emerald-900/60 bg-[#082b1b] flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-amber-500 rounded-full flex items-center justify-center font-black text-[#0c3823] border-2 border-white shadow-md">
-              🌾
-            </div>
-            <div>
-              <h1 className="text-xl font-black tracking-tight text-white leading-tight">MandiSetu</h1>
-              <p className="text-[11px] text-yellow-400 font-semibold">{tFarmer('portalName')}</p>
-            </div>
+          {/* Mandi Marg Branding Banner */}
+          <div className="p-5 border-b border-emerald-900/60 bg-[#082b1b] flex items-center justify-between">
+            <Link href={`/${locale}`}>
+              <MandiMargLogo size="md" variant="dark" />
+            </Link>
           </div>
 
           {/* Navigation Links */}

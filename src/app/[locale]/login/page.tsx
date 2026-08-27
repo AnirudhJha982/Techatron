@@ -9,6 +9,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import Link from 'next/link'
 import PublicHeader from '@/components/PublicHeader'
 import PublicFooter from '@/components/PublicFooter'
+import MandiMargLogo from '@/components/MandiMargLogo'
 
 export default function LoginPage() {
   const [errorMessage, dispatch, isPending] = useActionState(authenticate, undefined)
@@ -26,12 +27,12 @@ export default function LoginPage() {
 
       <main className="flex-grow flex items-center justify-center py-12 px-4">
         <Card className="w-full max-w-md shadow-xl border-t-4 border-t-green-800 bg-white">
-          <CardHeader className="space-y-1 text-center">
-            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto text-2xl mb-2">
-              🔐
+          <CardHeader className="space-y-1 text-center flex flex-col items-center">
+            <div className="mb-2">
+              <MandiMargLogo size="lg" />
             </div>
-            <CardTitle className="text-2xl font-bold text-green-950">Portal Login</CardTitle>
-            <CardDescription className="text-sm text-gray-600">
+            <CardTitle className="text-2xl font-black text-[#0c3823]">Sign In to Mandi Marg</CardTitle>
+            <CardDescription className="text-xs text-gray-600">
               Enter your mobile number and password to access your role portal
             </CardDescription>
           </CardHeader>

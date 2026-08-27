@@ -1,7 +1,7 @@
 "use client"
 
 import React from 'react'
-import { MANDI_MARG_LOGO_BASE64 } from './logoData'
+import { MANDI_MARG_LOGO_LIGHT, MANDI_MARG_LOGO_DARK } from './logoData'
 
 interface MandiMargLogoProps {
   className?: string
@@ -16,12 +16,12 @@ export default function MandiMargLogo({
   compact = false,
   variant = 'light'
 }: MandiMargLogoProps) {
-  // Proportional width mapping matching desktop header rule (180px - 240px+)
+  // Proportional width mapping matching desktop rule (220px - 280px+)
   const widthClasses = {
-    sm: 'w-[140px] sm:w-[170px]',
-    md: 'w-[180px] sm:w-[220px]',
-    lg: 'w-[240px] sm:w-[280px]',
-    xl: 'w-[280px] sm:w-[340px]'
+    sm: 'w-[150px] sm:w-[190px]',
+    md: 'w-[200px] sm:w-[245px]',
+    lg: 'w-[250px] sm:w-[300px]',
+    xl: 'w-[300px] sm:w-[380px]'
   }
 
   const compactSizeClasses = {
@@ -31,7 +31,9 @@ export default function MandiMargLogo({
     xl: 'w-16 h-16'
   }
 
-  const logoSrc = MANDI_MARG_LOGO_BASE64 || "/mandi-marg-logo.jpg"
+  const logoSrc = variant === 'dark'
+    ? (MANDI_MARG_LOGO_DARK || MANDI_MARG_LOGO_LIGHT)
+    : (MANDI_MARG_LOGO_LIGHT || MANDI_MARG_LOGO_DARK)
 
   if (compact) {
     return (
@@ -41,8 +43,7 @@ export default function MandiMargLogo({
           alt="Mandi Marg Emblem"
           className="w-full h-full object-cover scale-125 object-left"
           onError={(e) => {
-            // Fallback if data URI fails
-            (e.target as HTMLImageElement).src = "/mandi-marg-logo.jpg"
+            (e.target as HTMLImageElement).src = "/mandi-marg-logo-transparent.png"
           }}
         />
       </div>
@@ -54,10 +55,10 @@ export default function MandiMargLogo({
       <img
         src={logoSrc}
         alt="Mandi Marg"
-        className={`h-auto ${widthClasses[size] || 'w-[200px]'} object-contain drop-shadow-sm transition-all duration-200`}
+        className={`h-auto ${widthClasses[size] || 'w-[245px]'} max-w-full object-contain transition-all duration-200`}
         style={{ aspectRatio: 'auto' }}
         onError={(e) => {
-          (e.target as HTMLImageElement).src = "/mandi-marg-logo.jpg"
+          (e.target as HTMLImageElement).src = "/mandi-marg-logo-transparent.png"
         }}
       />
     </div>

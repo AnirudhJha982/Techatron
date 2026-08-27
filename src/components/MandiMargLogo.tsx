@@ -1,3 +1,5 @@
+"use client"
+
 import React from 'react'
 import { MANDI_MARG_LOGO_BASE64 } from './logoData'
 

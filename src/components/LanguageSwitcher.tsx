@@ -1,6 +1,7 @@
 "use client"
 
 import { usePathname } from "next/navigation"
+import { saveUserLanguagePreferenceAction } from "@/app/actions/languageActions"
 
 const LANGUAGES = [
   { code: "en", name: "English" },
@@ -36,10 +37,14 @@ export default function LanguageSwitcher() {
   const validCodes = LANGUAGES.map(l => l.code)
   const currentLocale = validCodes.includes(segments[1]) ? segments[1] : 'en'
 
-  const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleLanguageChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
     const nextLocale = e.target.value
+    if (nextLocale === currentLocale) return
+
+    // Save manual preference permanently to MongoDB Atlas & Cookie
+    await saveUserLanguagePreferenceAction(nextLocale)
+
     const pathSegments = pathname.split('/')
-    
     if (validCodes.includes(pathSegments[1])) {
       pathSegments[1] = nextLocale
     } else {

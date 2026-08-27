@@ -35,7 +35,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             id: user._id.toString(),
             name: user.name,
             role: user.role,
-            language: user.language
+            language: user.language || 'en',
+            isManualLanguage: !!user.isManualLanguage,
+            preferredLanguage: user.preferredLanguage || user.language
           }
         }
         return null

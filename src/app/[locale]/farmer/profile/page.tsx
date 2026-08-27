@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button"
 import mongoose from "mongoose"
 import { getTranslations } from 'next-intl/server'
 import VerificationWizard from "@/components/VerificationWizard"
+import ProfileLanguageSettings from "@/components/ProfileLanguageSettings"
+import { getLanguageSourceInfo } from "@/lib/languageResolver"
 import Link from 'next/link'
 
 export default async function FarmerProfilePage({ params }: { params: Promise<{ locale: string }> }) {
@@ -25,6 +27,8 @@ export default async function FarmerProfilePage({ params }: { params: Promise<{ 
     : null
 
   const isVerified = farmerProfile?.kycStatus === 'VERIFIED' && farmerProfile?.bookingEligible === true
+
+  const langInfo = getLanguageSourceInfo(farmerUser as any, farmerProfile as any)
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
@@ -89,6 +93,15 @@ export default async function FarmerProfilePage({ params }: { params: Promise<{ 
           initialIfsc={farmerProfile?.ifscCode || 'SBIN0001245'}
         />
       )}
+
+      {/* Language Preference Settings Card */}
+      <ProfileLanguageSettings
+        currentLocale={locale}
+        isManual={langInfo.isManual}
+        isDerivedFromState={langInfo.isDerivedFromState}
+        stateName={langInfo.stateName}
+        effectiveLangName={langInfo.langDetails.english}
+      />
 
       {/* Farmer Profile Card Details */}
       <Card className="bg-white shadow-sm border-slate-200">

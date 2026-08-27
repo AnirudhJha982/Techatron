@@ -6,6 +6,8 @@ export interface IUser extends Document {
   passwordHash: string
   role: 'FARMER' | 'WORKER' | 'ADMIN'
   language: string
+  isManualLanguage: boolean
+  preferredLanguage?: string
   createdAt: Date
   updatedAt: Date
 }
@@ -16,7 +18,9 @@ const UserSchema = new Schema<IUser>(
     phoneNumber: { type: String, required: true, unique: true, index: true },
     passwordHash: { type: String, required: true },
     role: { type: String, enum: ['FARMER', 'WORKER', 'ADMIN'], default: 'FARMER' },
-    language: { type: String, default: 'en' }
+    language: { type: String, default: 'en' },
+    isManualLanguage: { type: Boolean, default: false },
+    preferredLanguage: { type: String }
   },
   { timestamps: true }
 )

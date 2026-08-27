@@ -31,9 +31,15 @@ export async function authenticate(
       return 'Invalid credentials. Password incorrect.'
     }
 
+    let farmerProfile = null
+    if (user.role === 'FARMER') {
+      farmerProfile = await FarmerProfile.findOne({ userId: user._id }).lean()
+    }
+
+    const { resolveUserEffectiveLanguage } = await import('@/lib/languageResolver')
+    const effectiveLang = resolveUserEffectiveLanguage(user, farmerProfile)
     const role = user.role.toLowerCase()
-    const locale = user.language || 'en'
-    const targetDashboard = `/${locale}/${role}/dashboard`
+    const targetDashboard = `/${effectiveLang}/${role}/dashboard`
 
     await signIn('credentials', {
       phoneNumber,
@@ -83,7 +89,8 @@ export async function registerFarmer(formData: FormData) {
     phoneNumber,
     passwordHash,
     role: "FARMER",
-    language: "en"
+    language: "en",
+    isManualLanguage: false
   })
 
   // Create FarmerProfile

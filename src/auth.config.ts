@@ -12,6 +12,8 @@ export const authConfig = {
       if (user) {
         token.role = user.role
         token.language = user.language
+        token.isManualLanguage = user.isManualLanguage
+        token.preferredLanguage = user.preferredLanguage
       }
       return token
     },
@@ -19,6 +21,8 @@ export const authConfig = {
       if (session.user) {
         session.user.role = token.role as string
         session.user.language = token.language as string
+        session.user.isManualLanguage = token.isManualLanguage as boolean | undefined
+        session.user.preferredLanguage = token.preferredLanguage as string | undefined
         session.user.id = token.sub as string
       }
       return session

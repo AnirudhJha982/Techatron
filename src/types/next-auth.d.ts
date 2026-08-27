@@ -6,6 +6,8 @@ declare module "next-auth" {
       id: string
       role: string
       language: string
+      isManualLanguage?: boolean
+      preferredLanguage?: string
     } & DefaultSession["user"]
   }
 
@@ -13,5 +15,7 @@ declare module "next-auth" {
     id: string
     role: string
     language: string
+    isManualLanguage?: boolean
+    preferredLanguage?: string
   }
 }

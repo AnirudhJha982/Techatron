@@ -4,6 +4,7 @@ import { connectToDatabase } from "@/lib/mongodb"
 import { Booking, Procurement, Payment, WorkerProfile, FarmerProfile, User, Notification, AuditLog, ProcurementCentre } from "@/models"
 import { auth } from "@/auth"
 import { revalidatePath } from "next/cache"
+import { redirect } from "next/navigation"
 
 export async function selectWorkerCentre(centreId: string) {
   const session = await auth()
@@ -28,8 +29,12 @@ export async function selectWorkerCentre(centreId: string) {
     throw new Error("Procurement centre not found or is inactive.")
   }
 
-  if (centre.state.toLowerCase() !== workerProfile.state.toLowerCase()) {
+  if (workerProfile.state && centre.state && centre.state.toLowerCase() !== workerProfile.state.toLowerCase()) {
     throw new Error("You are not authorized to access this centre.")
+  }
+
+  if (!workerProfile.state && centre.state) {
+    workerProfile.state = centre.state
   }
 
   workerProfile.centreId = centre._id
@@ -67,12 +72,22 @@ export async function updateBookingStatusAction(bookingId: string, status: "PROC
       throw new Error("Centre not found or inactive.")
     }
 
-    if (workerProfile.state.toLowerCase() !== centre.state.toLowerCase()) {
+    if (!workerProfile.state && centre.state) {
+      workerProfile.state = centre.state
+      await workerProfile.save()
+    }
+
+    if (workerProfile.state && centre.state && workerProfile.state.toLowerCase() !== centre.state.toLowerCase()) {
       throw new Error("You are not authorized to access this centre.")
     }
 
     if (!workerProfile.centreId || workerProfile.centreId.toString() !== booking.centreId.toString()) {
-      throw new Error("Unauthorized. You can only manage bookings for your currently assigned Mandi.")
+      if (!workerProfile.centreId) {
+        workerProfile.centreId = centre._id
+        await workerProfile.save()
+      } else {
+        throw new Error("Unauthorized. You can only manage bookings for your currently assigned Mandi.")
+      }
     }
   }
 
@@ -110,6 +125,7 @@ export async function submitProcurementAction(formData: FormData): Promise<void>
     throw new Error("Unauthorized")
   }
 
+  const locale = (formData.get("locale") as string) || "en"
   const bookingId = formData.get("bookingId") as string
   const crop = formData.get("crop") as string
   const grossWeight = parseFloat(formData.get("grossWeight") as string || "0")
@@ -120,7 +136,7 @@ export async function submitProcurementAction(formData: FormData): Promise<void>
   const moistureLevel = parseFloat(formData.get("moistureLevel") as string || "11.2")
   const remarks = formData.get("remarks") as string
 
-  await processProcurementAction({
+  const result = await processProcurementAction({
     bookingId,
     crop,
     quantity,
@@ -128,6 +144,8 @@ export async function submitProcurementAction(formData: FormData): Promise<void>
     moistureLevel,
     remarks
   })
+
+  redirect(`/${locale}/worker/procurement?success=1&token=${encodeURIComponent(result.tokenNumber || '')}&amount=${result.amount || 0}`)
 }
 
 export async function processProcurementAction(data: {
@@ -162,12 +180,22 @@ export async function processProcurementAction(data: {
       throw new Error("Centre not found or inactive.")
     }
 
-    if (workerProfile.state.toLowerCase() !== centre.state.toLowerCase()) {
+    if (!workerProfile.state && centre.state) {
+      workerProfile.state = centre.state
+      await workerProfile.save()
+    }
+
+    if (workerProfile.state && centre.state && workerProfile.state.toLowerCase() !== centre.state.toLowerCase()) {
       throw new Error("You are not authorized to access this centre.")
     }
 
     if (!workerProfile.centreId || workerProfile.centreId.toString() !== booking.centreId.toString()) {
-      throw new Error("Unauthorized. You can only manage procurements for your currently assigned Mandi.")
+      if (!workerProfile.centreId) {
+        workerProfile.centreId = centre._id
+        await workerProfile.save()
+      } else {
+        throw new Error("Unauthorized. You can only manage procurements for your currently assigned Mandi.")
+      }
     }
   }
 
@@ -251,5 +279,10 @@ export async function processProcurementAction(data: {
   revalidatePath('/farmer/dashboard')
   revalidatePath('/farmer/procurement')
   revalidatePath('/farmer/payments')
-  return { success: true, procurementId: procurement._id.toString() }
+  return { 
+    success: true, 
+    procurementId: procurement._id.toString(),
+    tokenNumber: booking.tokenNumber,
+    amount: totalAmount
+  }
 }

@@ -9,9 +9,15 @@ import { submitProcurementAction } from "@/app/actions/workerActions"
 import { redirect } from "next/navigation"
 import Link from "next/link"
 
-export default async function WorkerProcurementFormPage({ params, searchParams }: { params: Promise<{ locale: string }>, searchParams: Promise<{ bookingId?: string }> }) {
+export default async function WorkerProcurementFormPage({ 
+  params, 
+  searchParams 
+}: { 
+  params: Promise<{ locale: string }>, 
+  searchParams: Promise<{ bookingId?: string; success?: string; token?: string; amount?: string }> 
+}) {
   const { locale } = await params
-  const { bookingId } = await searchParams
+  const { bookingId, success, token, amount } = await searchParams
   const session = await auth()
 
   await connectToDatabase()
@@ -64,16 +70,48 @@ export default async function WorkerProcurementFormPage({ params, searchParams }
         </Link>
       </div>
 
+      {success === '1' && (
+        <div className="bg-emerald-50 border-2 border-emerald-500/30 p-5 rounded-2xl text-emerald-950 space-y-3 shadow-md animate-in fade-in zoom-in-95 duration-300">
+          <div className="flex items-center space-x-2 text-emerald-800 font-black text-lg">
+            <span className="text-2xl">🎉</span>
+            <span>Procurement Verified & DBT Payment Initiated!</span>
+          </div>
+          <p className="text-sm text-emerald-800 leading-relaxed">
+            Produce receipt for Token <strong>{token || 'Recent'}</strong> has been successfully graded and recorded.
+            {amount ? (
+              <> A direct benefit transfer (DBT) of <strong className="text-emerald-900 font-black">₹ {Number(amount).toLocaleString('en-IN')}</strong> has been queued for disbursement to the farmer.</>
+            ) : (
+              <> Direct benefit payment has been queued for disbursement.</>
+            )}
+          </p>
+          <div className="flex flex-wrap gap-2 pt-2">
+            <Link href={`/${locale}/worker/dashboard`}>
+              <Button size="sm" className="bg-emerald-700 hover:bg-emerald-800 text-white font-bold shadow-sm">
+                📊 Mandi Dashboard
+              </Button>
+            </Link>
+            <Link href={`/${locale}/worker/queue`}>
+              <Button size="sm" variant="outline" className="border-emerald-400 text-emerald-900 font-bold hover:bg-emerald-100 bg-white">
+                ⏳ Live Queue Board
+              </Button>
+            </Link>
+            <Link href={`/${locale}/worker/procurement`}>
+              <Button size="sm" variant="outline" className="border-slate-300 text-slate-700 font-semibold hover:bg-slate-100 bg-white">
+                + Process Next Token
+              </Button>
+            </Link>
+          </div>
+        </div>
+      )}
+
       <Card className="bg-white shadow-sm border-slate-200">
         <CardHeader className="border-b bg-slate-50/50">
           <CardTitle className="text-lg font-bold text-slate-900">Official Produce Receipt Form</CardTitle>
           <CardDescription className="text-xs text-slate-500">{centre?.name || 'Mandi Centre'}</CardDescription>
         </CardHeader>
         <CardContent className="pt-6">
-          <form action={async (formData) => {
-            "use server"
-            await submitProcurementAction(formData)
-          }} className="space-y-4">
+          <form action={submitProcurementAction} className="space-y-4">
+            <input type="hidden" name="locale" value={locale} />
             {bookings.length === 0 && (
               <div className="bg-amber-50 border border-amber-300 p-4 rounded-xl text-amber-900 text-xs space-y-2">
                 <div className="font-bold flex items-center space-x-1.5 text-amber-950 text-sm">

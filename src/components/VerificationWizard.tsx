@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { submitFarmerVerificationAction } from '@/app/actions/verification'
+import StateSelect from '@/components/ui/StateSelect'
 
 interface VerificationWizardProps {
   initialFarmerId?: string
@@ -169,13 +170,13 @@ export default function VerificationWizard({
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-400 uppercase mb-1">State</label>
-                  <input
-                    type="text"
-                    required
+                  <label className="block text-slate-400 uppercase mb-1 text-xs">State</label>
+                  <StateSelect
+                    name="state"
                     value={state}
                     onChange={(e) => setState(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white font-bold"
+                    required
+                    darkMode
                   />
                 </div>
                 <div>

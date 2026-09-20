@@ -5,7 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { toggleWorkerStatus, resetWorkerPassword, createWorker } from '@/app/actions/adminWorker'
+import { toggleWorkerStatus, resetWorkerPassword, createWorker, deleteWorker } from '@/app/actions/adminWorker'
+import StateSelect from '@/components/ui/StateSelect'
+import PhoneInput from '@/components/ui/PhoneInput'
 
 export default function WorkerTable({ 
   workers, 
@@ -18,12 +20,24 @@ export default function WorkerTable({
   const [showCreate, setShowCreate] = useState(false)
   const [resetId, setResetId] = useState<string | null>(null)
   const [createdCredentials, setCreatedCredentials] = useState<{username: string, password: string} | null>(null)
+  const [workerPhone, setWorkerPhone] = useState('')
 
   const handleToggleStatus = async (userId: string, currentStatus: boolean) => {
     if (!confirm(`Are you sure you want to ${currentStatus ? 'deactivate' : 'activate'} this worker?`)) return
     setLoading(true)
     try {
       await toggleWorkerStatus(userId, currentStatus)
+    } catch (e: any) {
+      alert(e.message)
+    }
+    setLoading(false)
+  }
+
+  const handleDeleteWorker = async (userId: string, workerName: string) => {
+    if (!confirm(`Are you sure you want to permanently delete the account for "${workerName}"? This action cannot be undone.`)) return
+    setLoading(true)
+    try {
+      await deleteWorker(userId)
     } catch (e: any) {
       alert(e.message)
     }
@@ -61,18 +75,22 @@ export default function WorkerTable({
     }
 
     const username = formData.get("username") as string
+    // Ensure validated phone is sent
+    formData.set("phoneNumber", workerPhone)
 
     try {
       await createWorker({
         name: formData.get("name") as string,
         username,
-        phoneNumber: formData.get("phoneNumber") as string || undefined,
+        phoneNumber: workerPhone || undefined,
         password,
-        centreId: formData.get("centreId") as string,
+        state: formData.get("state") as string,
+        centreId: (formData.get("centreId") as string) || undefined,
         isActive: formData.get("isActive") === "true"
       })
       
       setCreatedCredentials({ username, password })
+      setWorkerPhone('')
     } catch (e: any) {
       alert(e.message)
     }
@@ -109,7 +127,11 @@ export default function WorkerTable({
                 </div>
                 <div className="space-y-2">
                   <Label>Mobile Number</Label>
-                  <Input name="phoneNumber" placeholder="e.g. 9876543210" />
+                  <PhoneInput
+                    name="phoneNumber"
+                    value={workerPhone}
+                    onChange={setWorkerPhone}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>Account Status</Label>
@@ -126,10 +148,14 @@ export default function WorkerTable({
                   <Label>Confirm Password *</Label>
                   <Input name="confirmPassword" type="password" required />
                 </div>
-                <div className="space-y-2 col-span-2">
-                  <Label>Assign to Mandi *</Label>
-                  <select name="centreId" required className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
-                    <option value="">-- Select Mandi --</option>
+                <div className="space-y-2">
+                  <Label>Worker State *</Label>
+                  <StateSelect name="state" required />
+                </div>
+                <div className="space-y-2">
+                  <Label>Assign to Mandi (Optional)</Label>
+                  <select name="centreId" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+                    <option value="">-- No Default Mandi --</option>
                     {centres.map(c => (
                       <option key={c.id} value={c.id}>{c.name} ({c.district}, {c.state})</option>
                     ))}
@@ -224,6 +250,9 @@ export default function WorkerTable({
                     <td className="p-3 flex gap-2">
                       <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={() => handleToggleStatus(w.id, w.isActive)} disabled={loading}>
                         {w.isActive ? 'Deactivate' : 'Activate'}
+                      </Button>
+                      <Button size="sm" variant="outline" className="h-7 text-[10px] text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700" onClick={() => handleDeleteWorker(w.id, w.name)} disabled={loading}>
+                        Delete
                       </Button>
                       <Button size="sm" variant="outline" className="h-7 text-[10px] text-amber-700 border-amber-200 hover:bg-amber-50" onClick={() => setResetId(w.id)} disabled={loading}>
                         Reset Pwd

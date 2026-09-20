@@ -5,6 +5,7 @@ import { AuthError } from "next-auth"
 import { connectToDatabase } from "@/lib/mongodb"
 import { User, FarmerProfile, Notification } from "@/models"
 import bcrypt from "bcryptjs"
+import { validatePhone, isValidState, PHONE_ERROR_MESSAGE } from "@/lib/constants/india"
 
 export async function authenticate(
   prevState: string | undefined,
@@ -28,8 +29,8 @@ export async function authenticate(
       return 'Invalid credentials. User not registered.'
     }
     
-    if (user.role === 'WORKER' && user.isActive === false) {
-      return 'Worker account is deactivated. Please contact admin.'
+    if (user.isActive === false) {
+      return 'Your account has been deactivated. Please contact the administrator.'
     }
 
     const passwordsMatch = await bcrypt.compare(password, user.passwordHash)
@@ -81,6 +82,16 @@ export async function registerFarmer(formData: FormData) {
 
   if (!name || !phoneNumber || !password) {
     return { error: "Name, phone number, and password are required." }
+  }
+
+  // ── Backend phone validation ─────────────────────────────────────────────
+  if (!validatePhone(phoneNumber)) {
+    return { error: PHONE_ERROR_MESSAGE }
+  }
+
+  // ── Backend state validation ─────────────────────────────────────────────
+  if (state && !isValidState(state)) {
+    return { error: "Please select a valid Indian state from the list." }
   }
 
   await connectToDatabase()

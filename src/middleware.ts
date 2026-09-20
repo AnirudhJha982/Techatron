@@ -19,17 +19,12 @@ const intlMiddleware = createMiddleware({
 export default auth((req) => {
   const isLoggedIn = !!req.auth
   const { pathname } = req.nextUrl
-
-  // Check if it's a protected route (ignores locale prefix)
-  const isProtected = locales.some(l => 
-    pathname.startsWith(`/${l}/farmer`) || 
-    pathname.startsWith(`/${l}/worker`) || 
-    pathname.startsWith(`/${l}/admin`)
-  )
   
-  if (isProtected && !isLoggedIn) {
+  // Basic protected routes check
+  const isProtectedRoute = pathname.includes('/farmer/') || pathname.includes('/worker/') || pathname.includes('/admin/')
+  if (isProtectedRoute && !isLoggedIn) {
     const locale = pathname.split('/')[1] || 'en'
-    return NextResponse.redirect(new URL(`/${locale}/login`, req.nextUrl))
+    return NextResponse.redirect(new URL(`/${locale}/login`, req.url))
   }
 
   // Next-intl handles the actual routing/rewrites

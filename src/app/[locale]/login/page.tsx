@@ -16,9 +16,9 @@ export default function LoginPage() {
   const [phone, setPhone] = useState('')
   const [pass, setPass] = useState('')
 
-  const fillDemo = (demoPhone: string) => {
-    setPhone(demoPhone)
-    setPass('password123')
+  const fillDemo = (id: string, password = '@ani123') => {
+    setPhone(id)
+    setPass(password)
   }
 
   return (
@@ -80,15 +80,15 @@ export default function LoginPage() {
               </Button>
             </form>
 
-            {/* Quick Demo Login Buttons */}
+            {/* Quick Auto-Fill Login Buttons */}
             <div className="mt-6 border-t border-gray-200 pt-4">
-              <p className="text-xs font-bold text-gray-500 uppercase tracking-wider text-center mb-3">Quick Demo Auto-Fill (Password: password123)</p>
+              <p className="text-xs font-bold text-gray-500 uppercase tracking-wider text-center mb-3">Quick Auto-Fill (Number ,Password)</p>
               <div className="grid grid-cols-3 gap-2 text-xs">
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => fillDemo('9876543210')}
+                  onClick={() => fillDemo('7856060773', '@ani123')}
                   className="border-green-300 text-green-800 hover:bg-green-50 font-semibold"
                 >
                   🌾 Farmer
@@ -97,7 +97,7 @@ export default function LoginPage() {
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => fillDemo('9876543211')}
+                  onClick={() => fillDemo('W001', '@ani123')}
                   className="border-yellow-400 text-yellow-800 hover:bg-yellow-50 font-semibold"
                 >
                   🏢 Worker
@@ -106,7 +106,7 @@ export default function LoginPage() {
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => fillDemo('9876543212')}
+                  onClick={() => fillDemo('8789887942', '@ani123')}
                   className="border-slate-400 text-slate-800 hover:bg-slate-100 font-semibold"
                 >
                   🏛️ Admin

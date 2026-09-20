@@ -6,6 +6,7 @@ import { User, WorkerProfile, ProcurementCentre } from '@/models'
 import bcrypt from 'bcryptjs'
 import { revalidatePath } from 'next/cache'
 import mongoose from 'mongoose'
+import { validatePhone, isValidState, PHONE_ERROR_MESSAGE } from '@/lib/constants/india'
 
 export async function createWorker(data: {
   name: string
@@ -13,7 +14,8 @@ export async function createWorker(data: {
   username: string
   passwordHash?: string // Pre-hashed or we hash it here if it's plaintext
   password?: string
-  centreId: string
+  state: string
+  centreId?: string
   isActive?: boolean
 }) {
   const session = await auth()
@@ -25,6 +27,16 @@ export async function createWorker(data: {
 
   if (!data.username) {
     throw new Error('Worker ID (Username) is required.')
+  }
+
+  // ── Backend phone validation ─────────────────────────────────────────────
+  if (data.phoneNumber && !validatePhone(data.phoneNumber)) {
+    throw new Error(PHONE_ERROR_MESSAGE)
+  }
+
+  // ── Backend state validation ─────────────────────────────────────────────
+  if (data.state && !isValidState(data.state)) {
+    throw new Error('Please select a valid Indian state from the dropdown.')
   }
 
   // Check if username exists
@@ -64,7 +76,8 @@ export async function createWorker(data: {
 
     await WorkerProfile.create([{
       userId: user[0]._id,
-      centreId: new mongoose.Types.ObjectId(data.centreId)
+      state: data.state,
+      centreId: data.centreId ? new mongoose.Types.ObjectId(data.centreId) : undefined
     }], { session: sessionDB })
 
     await sessionDB.commitTransaction()
@@ -110,3 +123,19 @@ export async function resetWorkerPassword(userId: string, newPassword: string) {
 
   return { success: true }
 }
+
+export async function deleteWorker(userId: string) {
+  const session = await auth()
+  if (!session || session.user?.role !== 'ADMIN') {
+    throw new Error('Unauthorized. Admin access required.')
+  }
+
+  await connectToDatabase()
+
+  await WorkerProfile.deleteMany({ userId: new mongoose.Types.ObjectId(userId) })
+  await User.findByIdAndDelete(userId)
+
+  revalidatePath('/admin/workers')
+  return { success: true }
+}
+

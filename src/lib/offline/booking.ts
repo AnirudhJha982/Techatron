@@ -8,10 +8,13 @@ export async function getCentresOffline() {
     try {
       const db = await getDB();
       if (db) {
+        // Clear stale cache before writing fresh data
         const tx = db.transaction('centres', 'readwrite');
+        await tx.store.clear();
         for (const c of centres) {
           tx.store.put({ ...c, _id: c.id });
         }
+        await tx.done;
       }
     } catch (e) {
       console.error("Failed to cache centres offline:", e);
@@ -67,6 +70,10 @@ export async function createBookingOffline(slotId: string, centreId: string, dat
   if (typeof window !== 'undefined' && navigator.onLine) {
     const result = await createBooking(slotId, centreId, dateStr, operationId);
     
+    if (result && (result as any).error) {
+      throw new Error((result as any).error);
+    }
+
     // Save locally
     const db = await getDB();
     if (db) {
@@ -84,7 +91,8 @@ export async function createBookingOffline(slotId: string, centreId: string, dat
     tokenNumber: `TKN-${Math.floor(1000 + Math.random() * 9000)} (Offline)`,
     queuePosition: 'Pending',
     date: dateStr,
-    status: 'SCHEDULED'
+    status: 'SCHEDULED',
+    isOffline: true
   };
 
   const db = await getDB();

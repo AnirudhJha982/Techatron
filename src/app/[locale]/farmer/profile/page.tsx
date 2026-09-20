@@ -9,6 +9,7 @@ import VerificationWizard from "@/components/VerificationWizard"
 import ProfileLanguageSettings from "@/components/ProfileLanguageSettings"
 import { getLanguageSourceInfo } from "@/lib/languageResolver"
 import Link from 'next/link'
+import FarmerProfileFields from "./FarmerProfileFields"
 
 export default async function FarmerProfilePage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params
@@ -110,68 +111,23 @@ export default async function FarmerProfilePage({ params }: { params: Promise<{ 
           <CardDescription className="text-xs text-slate-500">Government Procurement Aadhaar-linked account profile</CardDescription>
         </CardHeader>
         <CardContent className="pt-6 space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-            <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase">{tProfile('fullName')}</label>
-              <input
-                type="text"
-                readOnly
-                value={farmerUser?.name || session?.user.name || ''}
-                className="w-full mt-1 border border-slate-200 bg-slate-50 rounded-lg p-2.5 font-bold text-slate-900"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase">{tProfile('mobileNumber')}</label>
-              <input
-                type="text"
-                readOnly
-                value={farmerUser?.phoneNumber || ''}
-                className="w-full mt-1 border border-slate-200 bg-slate-50 rounded-lg p-2.5 font-bold text-slate-900"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase">{tProfile('village')}</label>
-              <input
-                type="text"
-                readOnly={isVerified}
-                defaultValue={farmerProfile?.village || 'Nilokheri'}
-                className="w-full mt-1 border border-slate-200 bg-slate-50 rounded-lg p-2.5 font-bold text-slate-900"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase">{tProfile('district')}</label>
-              <input
-                type="text"
-                readOnly={isVerified}
-                defaultValue={farmerProfile?.district || 'Karnal'}
-                className="w-full mt-1 border border-slate-200 bg-slate-50 rounded-lg p-2.5 font-bold text-slate-900"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase">{tProfile('state')}</label>
-              <input
-                type="text"
-                readOnly={isVerified}
-                defaultValue={farmerProfile?.state || 'Haryana'}
-                className="w-full mt-1 border border-slate-200 bg-slate-50 rounded-lg p-2.5 font-bold text-slate-900"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase">{tProfile('landArea')}</label>
-              <input
-                type="number"
-                step="0.1"
-                readOnly={isVerified}
-                defaultValue={farmerProfile?.landSizeAcres || 5.0}
-                className="w-full mt-1 border border-slate-200 bg-slate-50 rounded-lg p-2.5 font-bold text-slate-900"
-              />
-            </div>
-          </div>
+          <FarmerProfileFields
+            name={farmerUser?.name || session?.user?.name || ''}
+            phoneNumber={farmerUser?.phoneNumber || ''}
+            village={farmerProfile?.village || 'Nilokheri'}
+            district={farmerProfile?.district || 'Karnal'}
+            state={farmerProfile?.state || 'Haryana'}
+            landSizeAcres={farmerProfile?.landSizeAcres || 5.0}
+            isVerified={isVerified}
+            labels={{
+              fullName: tProfile('fullName'),
+              mobileNumber: tProfile('mobileNumber'),
+              village: tProfile('village'),
+              district: tProfile('district'),
+              state: tProfile('state'),
+              landArea: tProfile('landArea'),
+            }}
+          />
 
           {/* Verification Status Matrix */}
           <div className="pt-4 border-t space-y-2 text-xs">

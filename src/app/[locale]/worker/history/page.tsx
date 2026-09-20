@@ -2,6 +2,7 @@ import { auth } from "@/auth"
 import { connectToDatabase } from "@/lib/mongodb"
 import { WorkerProfile, Procurement, Booking, FarmerProfile, User } from "@/models"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { redirect } from "next/navigation"
 
 export default async function WorkerHistoryPage() {
   const session = await auth()
@@ -9,6 +10,10 @@ export default async function WorkerHistoryPage() {
   await connectToDatabase()
 
   const workerProfile = await WorkerProfile.findOne({ userId: session?.user.id })
+
+  if (!workerProfile?.centreId) {
+    redirect(`/en/worker/booking`) // Note: using hardcoded /en/ since locale isn't parsed in history page params directly here without await params
+  }
 
   let procurementsData: any[] = []
   if (workerProfile) {

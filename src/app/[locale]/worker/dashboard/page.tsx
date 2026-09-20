@@ -3,6 +3,7 @@ import { connectToDatabase } from "@/lib/mongodb"
 import { WorkerProfile, ProcurementCentre, Booking, FarmerProfile, User, Slot, Procurement } from "@/models"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { redirect } from "next/navigation"
 import Link from "next/link"
 import mongoose from "mongoose"
 
@@ -18,8 +19,8 @@ export default async function WorkerDashboardPage({ params }: { params: Promise<
 
   const centre = workerProfile ? await ProcurementCentre.findById(workerProfile.centreId).lean() : null
 
-  if (!workerProfile || !centre) {
-    return <div className="p-8 text-red-600 font-bold">Worker profile or Procurement Centre not configured.</div>
+  if (!workerProfile?.centreId || !centre) {
+    redirect(`/${locale}/worker/booking`)
   }
 
   // Today's bookings for this centre

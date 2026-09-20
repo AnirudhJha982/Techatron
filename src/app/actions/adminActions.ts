@@ -1,9 +1,34 @@
 "use server"
 
 import { connectToDatabase } from "@/lib/mongodb"
-import { ProcurementCentre, Slot, Grievance, Notification, AuditLog, User } from "@/models"
+import { ProcurementCentre, Slot, Grievance, Notification, AuditLog, User, FarmerProfile } from "@/models"
 import { auth } from "@/auth"
 import { revalidatePath } from "next/cache"
+import { isValidState } from "@/lib/constants/india"
+
+export async function toggleUserStatusAction(userId: string, isActive: boolean) {
+  const session = await auth()
+  if (!session || session.user.role !== 'ADMIN') throw new Error("Unauthorized Admin Action")
+
+  await connectToDatabase()
+  const user = await User.findByIdAndUpdate(userId, { isActive }, { new: true })
+  if (!user) throw new Error("User not found")
+
+  // If deactivating a farmer, also revoke booking eligibility
+  if (!isActive && user.role === 'FARMER') {
+    await FarmerProfile.findOneAndUpdate({ userId }, { bookingEligible: false })
+  }
+
+  await AuditLog.create({
+    userId: session.user.id,
+    action: isActive ? "USER_ACTIVATED" : "USER_DEACTIVATED",
+    details: `${user.role} '${user.name}' (${userId.slice(-6)}) ${isActive ? 'activated' : 'deactivated'} by admin`
+  })
+
+  revalidatePath('/admin/farmers')
+  revalidatePath('/admin/workers')
+  return { success: true }
+}
 
 export async function createCentreAction(formData: FormData): Promise<void> {
   return createProcurementCentreAction(formData)
@@ -44,6 +69,15 @@ export async function createProcurementCentreAction(formData: FormData): Promise
   const district = formData.get("district") as string
   const address = formData.get("address") as string
   const capacityPerDay = parseInt(formData.get("capacityPerDay") as string || "150", 10)
+
+  if (!name || !state || !district) {
+    throw new Error("Centre name, state, and district are required.")
+  }
+
+  // ── Backend state validation ─────────────────────────────────────────────
+  if (!isValidState(state)) {
+    throw new Error("Please select a valid Indian state from the dropdown.")
+  }
 
   const centre = await ProcurementCentre.create({
     name,

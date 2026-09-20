@@ -54,53 +54,7 @@ async function seed() {
 
   const passwordHash = bcrypt.hashSync('password123', 10)
 
-  // 1. Procurement Centres (5 Centres)
-  const centreKarnal = await ProcurementCentre.create({
-    name: 'Mandi Samiti - Karnal Main',
-    state: 'Haryana',
-    district: 'Karnal',
-    address: 'GT Road, Near Grain Market, Karnal - 132001',
-    capacityPerDay: 500,
-    isActive: true
-  })
-
-  const centreLudhiana = await ProcurementCentre.create({
-    name: 'Anaj Mandi - Ludhiana East',
-    state: 'Punjab',
-    district: 'Ludhiana',
-    address: 'Ferozepur Road, Ludhiana - 141001',
-    capacityPerDay: 600,
-    isActive: true
-  })
-
-  const centreKota = await ProcurementCentre.create({
-    name: 'Krishi Upaj Mandi - Kota Central',
-    state: 'Rajasthan',
-    district: 'Kota',
-    address: 'Industrial Area, Kota - 324005',
-    capacityPerDay: 450,
-    isActive: true
-  })
-
-  const centreNashik = await ProcurementCentre.create({
-    name: 'APMC Mandi - Nashik Road',
-    state: 'Maharashtra',
-    district: 'Nashik',
-    address: 'Panchavati, Nashik - 422003',
-    capacityPerDay: 400,
-    isActive: true
-  })
-
-  const centreBareilly = await ProcurementCentre.create({
-    name: 'Mandi Parishad - Bareilly City',
-    state: 'Uttar Pradesh',
-    district: 'Bareilly',
-    address: 'Pilibhit Bypass Road, Bareilly - 243006',
-    capacityPerDay: 500,
-    isActive: true
-  })
-
-  const centres = [centreKarnal, centreLudhiana, centreKota, centreNashik, centreBareilly]
+  // NOTE: Procurement Centres are managed via the Admin page — not seeded here.
 
   // 2. Administrators (5 Admins)
   const adminData = [
@@ -127,13 +81,13 @@ async function seed() {
     adminUsers.push(user)
   }
 
-  // 3. Workers / Supervisors (5 Workers - 1 per centre)
+  // 3. Workers / Supervisors (5 Workers — centreId assigned later via Admin page)
   const workerData = [
-    { name: 'Suresh Verma (Supervisor)', phone: '9876543211', centreId: centreKarnal._id, lang: 'hi' },
-    { name: 'Harminder Singh (Supervisor)', phone: '9876543221', centreId: centreLudhiana._id, lang: 'pa' },
-    { name: 'Mukesh Meena (Supervisor)', phone: '9876543222', centreId: centreKota._id, lang: 'hi' },
-    { name: 'Ganesh Shinde (Supervisor)', phone: '9876543223', centreId: centreNashik._id, lang: 'mr' },
-    { name: 'Rakesh Gangwar (Supervisor)', phone: '9876543224', centreId: centreBareilly._id, lang: 'hi' }
+    { name: 'Suresh Verma (Supervisor)', phone: '9876543211', lang: 'hi' },
+    { name: 'Harminder Singh (Supervisor)', phone: '9876543221', lang: 'pa' },
+    { name: 'Mukesh Meena (Supervisor)', phone: '9876543222', lang: 'hi' },
+    { name: 'Ganesh Shinde (Supervisor)', phone: '9876543223', lang: 'mr' },
+    { name: 'Rakesh Gangwar (Supervisor)', phone: '9876543224', lang: 'hi' }
   ]
 
   const workerProfiles = []
@@ -146,8 +100,8 @@ async function seed() {
       language: w.lang
     })
     const profile = await WorkerProfile.create({
-      userId: user._id,
-      centreId: w.centreId
+      userId: user._id
+      // centreId: assigned later via admin page
     })
     workerProfiles.push(profile)
   }
@@ -199,120 +153,9 @@ async function seed() {
     farmerProfiles.push(profile)
   }
 
-  // 5. Time Slots for Centres
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
+  // NOTE: Slots, Bookings, and Procurements are created organically via the live app flow.
 
-  const slotsData = [
-    { timeSlot: '08:00 AM - 10:00 AM', capacity: 30, bookedCount: 5 },
-    { timeSlot: '10:00 AM - 12:00 PM', capacity: 35, bookedCount: 12 },
-    { timeSlot: '01:00 PM - 03:00 PM', capacity: 35, bookedCount: 8 },
-    { timeSlot: '03:00 PM - 05:00 PM', capacity: 25, bookedCount: 2 }
-  ]
-
-  const createdSlots = []
-  for (const c of centres) {
-    for (const s of slotsData) {
-      const slot = await Slot.create({
-        centreId: c._id,
-        date: today,
-        timeSlot: s.timeSlot,
-        capacity: s.capacity,
-        bookedCount: s.bookedCount
-      })
-      createdSlots.push(slot)
-    }
-  }
-
-  // 6. Seed Sample Bookings & Procurements
-  // Booking 0 (Completed Procurement for Ramesh Singh)
-  const pastDate = new Date()
-  pastDate.setDate(pastDate.getDate() - 1)
-
-  const bookingPrev = await Booking.create({
-    farmerId: farmerProfiles[0]._id,
-    centreId: centreKarnal._id,
-    slotId: createdSlots[0]._id,
-    date: pastDate,
-    tokenNumber: 'TKN-7821',
-    queuePosition: 1,
-    status: 'COMPLETED'
-  })
-
-  // Booking 1 (Active Scheduled Booking for Ramesh Singh)
-  const booking1 = await Booking.create({
-    farmerId: farmerProfiles[0]._id,
-    centreId: centreKarnal._id,
-    slotId: createdSlots[1]._id,
-    date: today,
-    tokenNumber: 'TKN-8472',
-    queuePosition: 4,
-    status: 'SCHEDULED'
-  })
-
-  // Booking 2 (Completed for Gurpreet Singh)
-  const booking2 = await Booking.create({
-    farmerId: farmerProfiles[1]._id,
-    centreId: centreLudhiana._id,
-    slotId: createdSlots[4]._id,
-    date: today,
-    tokenNumber: 'TKN-1094',
-    queuePosition: 2,
-    status: 'COMPLETED'
-  })
-
-  // 7. Procurements & Payments
-  // Procurement 1 for Ramesh Singh (42 Qtl Wheat @ 2275 = 95,550)
-  const procurement1 = await Procurement.create({
-    bookingId: bookingPrev._id,
-    workerId: workerProfiles[0]._id,
-    crop: 'Wheat (Sharbati)',
-    quantity: 42.0,
-    qualityGrade: 'Grade A',
-    moistureLevel: 11.2,
-    status: 'APPROVED',
-    paymentStatus: 'COMPLETED',
-    remarks: 'Grain quality tested. Moisture within limits.'
-  })
-
-  await Payment.create({
-    procurementId: procurement1._id,
-    farmerId: farmerProfiles[0]._id,
-    amount: 95550,
-    mspRatePerQuintal: 2275.0,
-    bankAccountMasked: 'XXXX-XXXX-4892',
-    ifscCode: 'SBIN0001245',
-    transactionId: 'TXN-9847102948',
-    status: 'SUCCESS',
-    paymentDate: pastDate
-  })
-
-  // Procurement 2 for Gurpreet Singh
-  const procurement2 = await Procurement.create({
-    bookingId: booking2._id,
-    workerId: workerProfiles[1]._id,
-    crop: 'Wheat (Sharbati)',
-    quantity: 45.5,
-    qualityGrade: 'Grade A',
-    moistureLevel: 11.8,
-    status: 'APPROVED',
-    paymentStatus: 'COMPLETED',
-    remarks: 'Grain quality tested. Moisture within limits.'
-  })
-
-  await Payment.create({
-    procurementId: procurement2._id,
-    farmerId: farmerProfiles[1]._id,
-    amount: 103512.5,
-    mspRatePerQuintal: 2275.0,
-    bankAccountMasked: 'XXXX-XXXX-4892',
-    ifscCode: 'SBIN0001245',
-    transactionId: 'TXN-9847102949',
-    status: 'SUCCESS',
-    paymentDate: new Date()
-  })
-
-  // 8. Notifications
+  // 5. Notifications
   await Notification.create({
     userId: farmerProfiles[0].userId,
     title: 'Token Generated Successfully',

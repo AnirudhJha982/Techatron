@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { createCentreAction, updateCentreStatusAction } from "@/app/actions/adminActions"
+import StateSelect from "@/components/ui/StateSelect"
 
 export default async function AdminCentresPage() {
   await connectToDatabase()
@@ -46,19 +47,19 @@ export default async function AdminCentresPage() {
             <form action={async (formData) => {
               "use server"
               await createCentreAction(formData)
-            }} className="space-y-4">
+            }} className="space-y-4" autoComplete="off">
               <div className="space-y-1.5">
                 <Label htmlFor="name">Centre / Mandi Name *</Label>
-                <Input id="name" name="name" required placeholder="e.g. APMC Market Yard" />
+                <Input id="name" name="name" required placeholder="e.g. APMC Market Yard" autoComplete="off" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label htmlFor="district">District *</Label>
-                  <Input id="district" name="district" required placeholder="e.g. Karnal" />
+                  <Input id="district" name="district" required placeholder="e.g. Karnal" autoComplete="off" />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="state">State *</Label>
-                  <Input id="state" name="state" required placeholder="e.g. Haryana" />
+                  <StateSelect name="state" id="state" required />
                 </div>
               </div>
               <div className="space-y-1.5">

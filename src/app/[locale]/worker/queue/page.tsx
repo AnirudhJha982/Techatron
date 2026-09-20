@@ -4,6 +4,7 @@ import { WorkerProfile, Booking, FarmerProfile, User } from "@/models"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { updateQueueStatusAction } from "@/app/actions/workerActions"
+import { redirect } from "next/navigation"
 import Link from "next/link"
 
 export default async function WorkerQueuePage({ params }: { params: Promise<{ locale: string }> }) {
@@ -14,15 +15,18 @@ export default async function WorkerQueuePage({ params }: { params: Promise<{ lo
 
   const workerProfile = await WorkerProfile.findOne({ userId: session?.user.id })
 
+  if (!workerProfile?.centreId) {
+    redirect(`/${locale}/worker/booking`)
+  }
+
   const today = new Date()
   today.setHours(0,0,0,0)
 
   let queueBookings: any[] = []
-  if (workerProfile) {
-    const rawQueue = await Booking.find({
-      centreId: workerProfile.centreId,
-      date: { $gte: today }
-    }).sort({ tokenNumber: 1 }).lean()
+  const rawQueue = await Booking.find({
+    centreId: workerProfile.centreId,
+    date: { $gte: today }
+  }).sort({ tokenNumber: 1 }).lean()
 
     queueBookings = await Promise.all(
       rawQueue.map(async (b) => {
@@ -37,7 +41,6 @@ export default async function WorkerQueuePage({ params }: { params: Promise<{ lo
         }
       })
     )
-  }
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">

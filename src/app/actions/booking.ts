@@ -7,26 +7,25 @@ import { revalidatePath } from 'next/cache'
 
 export async function getCentres() {
   try {
+    const session = await auth()
     await connectToDatabase()
-    let centres = await ProcurementCentre.find({ isActive: true }).lean()
-
-    // Self-healing: Provision default centres if collection is empty
-    if (!centres || centres.length === 0) {
-      const defaultCentres = [
-        { name: 'Mandi Samiti - Karnal Main', state: 'Haryana', district: 'Karnal', address: 'GT Road, Near Grain Market, Karnal - 132001', capacityPerDay: 500, isActive: true },
-        { name: 'Anaj Mandi - Ludhiana East', state: 'Punjab', district: 'Ludhiana', address: 'Ferozepur Road, Ludhiana - 141001', capacityPerDay: 600, isActive: true },
-        { name: 'Krishi Upaj Mandi - Kota Central', state: 'Rajasthan', district: 'Kota', address: 'Industrial Area, Kota - 324005', capacityPerDay: 450, isActive: true },
-        { name: 'APMC Mandi - Nashik Road', state: 'Maharashtra', district: 'Nashik', address: 'Panchavati, Nashik - 422003', capacityPerDay: 400, isActive: true },
-        { name: 'Mandi Parishad - Bareilly City', state: 'Uttar Pradesh', district: 'Bareilly', address: 'Pilibhit Bypass Road, Bareilly - 243006', capacityPerDay: 500, isActive: true },
-        { name: 'West Bengal State Agricultural Marketing Board - Siliguri', state: 'West Bengal', district: 'Siliguri', address: 'Hill Cart Road, Siliguri - 734001', capacityPerDay: 550, isActive: true },
-        { name: 'Kolkata APMC Main Yard - Barasat', state: 'West Bengal', district: 'North 24 Parganas', address: 'Jessore Road, Barasat - 700124', capacityPerDay: 500, isActive: true },
-        { name: 'Tripura Apex Agricultural Marketing Centre - Agartala', state: 'Tripura', district: 'West Tripura', address: 'GB Bazaar, Agartala - 799001', capacityPerDay: 400, isActive: true }
-      ]
-      for (const c of defaultCentres) {
-        await ProcurementCentre.create(c)
+    
+    let query: any = { isActive: true }
+    
+    // Apply strict state-based filtering for Farmers
+    if (!session || session.user.role !== 'FARMER') throw new Error('Unauthorized');
+    if (session.user.role === 'FARMER') {
+      const farmerProfile = await FarmerProfile.findOne({ userId: session.user.id })
+      if (!farmerProfile || !farmerProfile.state) {
+        return [] // Block access if farmer has no registered state
       }
-      centres = await ProcurementCentre.find({ isActive: true }).lean()
+      query.state = { $regex: new RegExp(`^${farmerProfile.state.trim()}$`, 'i') }
+      if (farmerProfile.district) {
+        query.district = { $regex: new RegExp(`^${farmerProfile.district.trim()}$`, 'i') }
+      }
     }
+
+    const centres = await ProcurementCentre.find(query).lean()
 
     return centres.map(c => ({
       id: c._id.toString(),
@@ -38,10 +37,7 @@ export async function getCentres() {
     }))
   } catch (err) {
     console.error("Error in getCentres:", err)
-    return [
-      { id: "c_karnal", name: "Mandi Samiti - Karnal Main", district: "Karnal", state: "Haryana", address: "GT Road, Karnal", capacityPerDay: 500 },
-      { id: "c_ludhiana", name: "Anaj Mandi - Ludhiana East", district: "Ludhiana", state: "Punjab", address: "Ferozepur Road, Ludhiana", capacityPerDay: 600 }
-    ]
+    return []
   }
 }
 
@@ -123,7 +119,31 @@ export async function createBooking(slotId: string, centreId: string, dateStr: s
 
   let farmerProfile = await FarmerProfile.findOne({ userId: session.user.id })
   if (!farmerProfile || !farmerProfile.bookingEligible || farmerProfile.kycStatus !== 'VERIFIED') {
-    throw new Error("Slot booking is restricted to verified farmers. Please complete your Farmer Verification (KYC) on your profile first.")
+    return { error: "Slot booking is restricted to verified farmers. Please complete your Farmer Verification (KYC) on your profile first." }
+  }
+
+  if (!farmerProfile.state) {
+    return { error: "Your state information is missing. Please contact the administrator." }
+  }
+
+  const centre = await ProcurementCentre.findById(centreId)
+  if (!centre) {
+    return { error: "Procurement centre not found." }
+  }
+
+  if (farmerProfile.state.trim().toLowerCase() !== centre.state.trim().toLowerCase()) {
+    return { error: "Selected procurement centre is not available for your state." }
+  }
+
+  // Prevent duplicate bookings on the same date
+  const existingActiveBooking = await Booking.findOne({
+    farmerId: farmerProfile._id,
+    date: dateObj,
+    status: { $in: ['SCHEDULED', 'ARRIVED', 'PROCESSING'] }
+  })
+  
+  if (existingActiveBooking) {
+    return { error: "You already have an active booking for this date." }
   }
 
   // ATOMIC CONCURRENCY CONTROL:
@@ -138,6 +158,10 @@ export async function createBooking(slotId: string, centreId: string, dateStr: s
       { new: true }
     )
   }
+  
+  if (!updatedSlot) {
+    return { error: "Selected slot is already full or no longer available." }
+  }
 
   // Generate Token Number e.g. TKN-8472
   const randomNum = Math.floor(1000 + Math.random() * 9000)
@@ -149,7 +173,7 @@ export async function createBooking(slotId: string, centreId: string, dateStr: s
   const booking = await Booking.create({
     farmerId: farmerProfile._id,
     centreId,
-    slotId: updatedSlot?._id || slotId,
+    slotId: updatedSlot._id,
     date: dateObj,
     tokenNumber,
     queuePosition: existingCount + 1,

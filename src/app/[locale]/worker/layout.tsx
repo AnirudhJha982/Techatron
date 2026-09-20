@@ -49,6 +49,7 @@ export default async function WorkerLayout({
     { label: tWorker('farmers'), href: `/${locale}/worker/farmers`, icon: "🔍" },
     { label: tWorker('procurementForm'), href: `/${locale}/worker/procurement`, icon: "⚖️" },
     { label: tWorker('history'), href: `/${locale}/worker/history`, icon: "📜" },
+    { label: "Booking Centres", href: `/${locale}/worker/booking`, icon: "🏢" },
     { label: tWorker('profile'), href: `/${locale}/worker/profile`, icon: "👤" }
   ]
 
@@ -61,6 +62,11 @@ export default async function WorkerLayout({
             <Link href={`/${locale}`} className="flex items-center space-x-3">
               <MandiMargLogo size="sm" variant="dark" />
               <span className="text-xs text-amber-200 font-bold bg-amber-900/60 px-2 py-0.5 rounded border border-amber-500/40">Worker Portal</span>
+              {centre && (
+                <span className="hidden md:inline-flex text-[10px] bg-amber-800 text-amber-100 px-2 py-0.5 rounded font-bold uppercase border border-amber-600">
+                  📍 {centre.name}
+                </span>
+              )}
             </Link>
           </div>
 

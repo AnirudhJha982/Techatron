@@ -10,19 +10,32 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import Link from 'next/link'
 import PublicHeader from '@/components/PublicHeader'
 import PublicFooter from '@/components/PublicFooter'
+import StateSelect from '@/components/ui/StateSelect'
+import PhoneInput from '@/components/ui/PhoneInput'
+import { validatePhone } from '@/lib/constants/india'
 
 export default function RegisterPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+  const [phone, setPhone] = useState('')
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    setLoading(true)
     setError(null)
 
+    // Frontend phone guard before hitting server
+    if (!validatePhone(phone)) {
+      setError('Enter a valid 10-digit Indian mobile number (must start with 6, 7, 8, or 9).')
+      return
+    }
+
+    setLoading(true)
     const formData = new FormData(e.currentTarget)
+    // Ensure the validated phone value is in formData
+    formData.set('phoneNumber', phone)
+
     const res = await registerFarmer(formData)
 
     if (res?.error) {
@@ -73,7 +86,13 @@ export default function RegisterPage() {
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="phoneNumber">Mobile Number *</Label>
-                    <Input id="phoneNumber" name="phoneNumber" type="tel" required placeholder="10-digit mobile" maxLength={10} />
+                    <PhoneInput
+                      name="phoneNumber"
+                      id="phoneNumber"
+                      value={phone}
+                      onChange={setPhone}
+                      required
+                    />
                   </div>
                 </div>
 
@@ -92,8 +111,8 @@ export default function RegisterPage() {
                     <Input id="district" name="district" placeholder="e.g. Karnal" />
                   </div>
                   <div className="space-y-1.5">
-                    <Label htmlFor="state">State</Label>
-                    <Input id="state" name="state" placeholder="e.g. Haryana" />
+                    <Label htmlFor="state">State *</Label>
+                    <StateSelect name="state" id="state" required />
                   </div>
                 </div>
 

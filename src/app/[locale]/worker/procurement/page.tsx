@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { submitProcurementAction } from "@/app/actions/workerActions"
+import { redirect } from "next/navigation"
 import Link from "next/link"
 
 export default async function WorkerProcurementFormPage({ params, searchParams }: { params: Promise<{ locale: string }>, searchParams: Promise<{ bookingId?: string }> }) {
@@ -16,15 +17,18 @@ export default async function WorkerProcurementFormPage({ params, searchParams }
   await connectToDatabase()
 
   const workerProfile = await WorkerProfile.findOne({ userId: session?.user.id })
-  const centre = workerProfile ? await ProcurementCentre.findById(workerProfile.centreId).lean() : null
+  const centre = workerProfile?.centreId ? await ProcurementCentre.findById(workerProfile.centreId).lean() : null
+
+  if (!workerProfile?.centreId || !centre) {
+    redirect(`/${locale}/worker/booking`)
+  }
 
   // Fetch active bookings for selection
   let bookings: any[] = []
-  if (workerProfile) {
-    const rawBookings = await Booking.find({
-      centreId: workerProfile.centreId,
-      status: { $in: ['ARRIVED', 'PROCESSING', 'SCHEDULED'] }
-    }).lean()
+  const rawBookings = await Booking.find({
+    centreId: workerProfile.centreId,
+    status: { $in: ['ARRIVED', 'PROCESSING'] }
+  }).lean()
 
     bookings = await Promise.all(
       rawBookings.map(async (b) => {
@@ -37,8 +41,7 @@ export default async function WorkerProcurementFormPage({ params, searchParams }
           farmerPhone: farmerUser?.phoneNumber || 'N/A'
         }
       })
-    )
-  }
+  )
 
   const selectedBooking = bookingId ? bookings.find(b => b.id === bookingId) || bookings[0] : bookings[0]
 

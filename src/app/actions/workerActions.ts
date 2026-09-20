@@ -1,9 +1,43 @@
 "use server"
 
 import { connectToDatabase } from "@/lib/mongodb"
-import { Booking, Procurement, Payment, WorkerProfile, FarmerProfile, User, Notification, AuditLog } from "@/models"
+import { Booking, Procurement, Payment, WorkerProfile, FarmerProfile, User, Notification, AuditLog, ProcurementCentre } from "@/models"
 import { auth } from "@/auth"
 import { revalidatePath } from "next/cache"
+
+export async function selectWorkerCentre(centreId: string) {
+  const session = await auth()
+  if (!session || !session.user || session.user.role !== 'WORKER') {
+    throw new Error("Unauthorized")
+  }
+
+  await connectToDatabase()
+
+  const user = await User.findById(session.user.id)
+  if (!user || user.isActive === false) {
+    throw new Error("Your account is inactive or not found.")
+  }
+
+  const workerProfile = await WorkerProfile.findOne({ userId: session.user.id })
+  if (!workerProfile) {
+    throw new Error("Worker profile not found.")
+  }
+
+  const centre = await ProcurementCentre.findById(centreId)
+  if (!centre || !centre.isActive) {
+    throw new Error("Procurement centre not found or is inactive.")
+  }
+
+  if (centre.state.toLowerCase() !== workerProfile.state.toLowerCase()) {
+    throw new Error("You are not authorized to access this centre.")
+  }
+
+  workerProfile.centreId = centre._id
+  await workerProfile.save()
+
+  revalidatePath('/worker')
+  return { success: true }
+}
 
 export async function updateQueueStatusAction(bookingId: string, status: "PROCESSING" | "COMPLETED" | "SCHEDULED" | "ARRIVED" | "CANCELLED") {
   return updateBookingStatusAction(bookingId, status)
@@ -23,8 +57,22 @@ export async function updateBookingStatusAction(bookingId: string, status: "PROC
   }
 
   if (session.user.role === 'WORKER') {
-    if (booking.centreId.toString() !== session.user.centreId) {
-      throw new Error("Unauthorized. You can only manage bookings for your assigned Mandi.")
+    const workerProfile = await WorkerProfile.findOne({ userId: session.user.id })
+    if (!workerProfile) {
+      throw new Error("Worker profile not found.")
+    }
+    
+    const centre = await ProcurementCentre.findById(booking.centreId)
+    if (!centre || !centre.isActive) {
+      throw new Error("Centre not found or inactive.")
+    }
+
+    if (workerProfile.state.toLowerCase() !== centre.state.toLowerCase()) {
+      throw new Error("You are not authorized to access this centre.")
+    }
+
+    if (!workerProfile.centreId || workerProfile.centreId.toString() !== booking.centreId.toString()) {
+      throw new Error("Unauthorized. You can only manage bookings for your currently assigned Mandi.")
     }
   }
 
@@ -102,14 +150,28 @@ export async function processProcurementAction(data: {
     throw new Error("Booking not found")
   }
 
+  let workerProfile = await WorkerProfile.findOne({ userId: session.user.id })
+  
   if (session.user.role === 'WORKER') {
-    if (booking.centreId.toString() !== session.user.centreId) {
-      throw new Error("Unauthorized. You can only manage procurements for your assigned Mandi.")
+    if (!workerProfile) {
+      throw new Error("Worker profile not found.")
+    }
+
+    const centre = await ProcurementCentre.findById(booking.centreId)
+    if (!centre || !centre.isActive) {
+      throw new Error("Centre not found or inactive.")
+    }
+
+    if (workerProfile.state.toLowerCase() !== centre.state.toLowerCase()) {
+      throw new Error("You are not authorized to access this centre.")
+    }
+
+    if (!workerProfile.centreId || workerProfile.centreId.toString() !== booking.centreId.toString()) {
+      throw new Error("Unauthorized. You can only manage procurements for your currently assigned Mandi.")
     }
   }
 
-  let workerProfile = await WorkerProfile.findOne({ userId: session.user.id })
-  if (!workerProfile) {
+  if (!workerProfile && session.user.role === 'ADMIN') {
     // Fallback if super admin processes
     const anyWorker = await WorkerProfile.findOne({})
     if (anyWorker) workerProfile = anyWorker
@@ -121,7 +183,7 @@ export async function processProcurementAction(data: {
   if (!procurement) {
     procurement = await Procurement.create({
       bookingId: data.bookingId,
-      workerId: workerProfile._id,
+      workerId: workerProfile!._id,
       crop: data.crop,
       quantity: data.quantity,
       qualityGrade: data.qualityGrade,

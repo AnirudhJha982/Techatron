@@ -31,6 +31,15 @@ export default async function FarmerDashboard({ params }: { params: Promise<{ lo
     ? await FarmerProfile.findOne({ userId: session.user.id })
     : null
 
+  if (!farmerProfile || !farmerProfile.state) {
+    return (
+      <div className="p-8 text-center bg-white rounded-xl shadow-sm border border-red-200 mt-8">
+        <h2 className="text-xl font-bold text-red-700">Profile Incomplete</h2>
+        <p className="mt-2 text-slate-600">Your state information is missing. Please contact the administrator.</p>
+      </div>
+    )
+  }
+
   // Active Booking
   let activeBookingData: any = null
   if (farmerProfile) {

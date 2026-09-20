@@ -41,8 +41,162 @@ export default function VoiceAssistant() {
   const [isSpeechSupported, setIsSpeechSupported] = useState(true)
   const [bookingLoading, setBookingLoading] = useState(false)
 
+  // Floating Draggable Position & Long-Press state
+  const [position, setPosition] = useState<{ x: number; y: number } | null>(null)
+  const [isDragging, setIsDragging] = useState(false)
+  const [isPressing, setIsPressing] = useState(false)
+
+  const buttonRef = useRef<HTMLButtonElement | null>(null)
+  const dragStartPos = useRef<{ x: number; y: number }>({ x: 0, y: 0 })
+  const initialBtnPos = useRef<{ x: number; y: number }>({ x: 0, y: 0 })
+  const longPressTimer = useRef<NodeJS.Timeout | null>(null)
+  const hasDragged = useRef(false)
+
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const recognitionRef = useRef<any>(null)
+
+  // Load saved position from localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('voice_assistant_pos')
+        if (saved) {
+          const parsed = JSON.parse(saved)
+          if (parsed && typeof parsed.x === 'number' && typeof parsed.y === 'number') {
+            setPosition(parsed)
+          }
+        }
+      } catch {}
+    }
+  }, [])
+
+  // Snap smoothly to nearest of screen corners
+  const snapToNearestCorner = (currentX: number, currentY: number) => {
+    if (typeof window === 'undefined') return { x: currentX, y: currentY }
+    const margin = 24
+    const width = buttonRef.current?.offsetWidth || 230
+    const height = buttonRef.current?.offsetHeight || 56
+
+    const midX = window.innerWidth / 2
+    const midY = window.innerHeight / 2
+
+    const targetX = currentX < midX ? margin : window.innerWidth - width - margin
+    const targetY = currentY < midY ? margin : window.innerHeight - height - margin
+
+    return { x: targetX, y: targetY }
+  }
+
+  const handlePointerDown = (e: React.PointerEvent<HTMLButtonElement>) => {
+    if (e.button !== 0) return
+    const rect = e.currentTarget.getBoundingClientRect()
+    dragStartPos.current = { x: e.clientX, y: e.clientY }
+    initialBtnPos.current = { x: rect.left, y: rect.top }
+    hasDragged.current = false
+    setIsPressing(true)
+
+    if (longPressTimer.current) clearTimeout(longPressTimer.current)
+    longPressTimer.current = setTimeout(() => {
+      setIsDragging(true)
+      hasDragged.current = true
+      if (typeof navigator !== 'undefined' && navigator.vibrate) {
+        navigator.vibrate(40)
+      }
+    }, 280)
+  }
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLButtonElement>) => {
+    const deltaX = e.clientX - dragStartPos.current.x
+    const deltaY = e.clientY - dragStartPos.current.y
+    const distance = Math.hypot(deltaX, deltaY)
+
+    if (isPressing && distance > 8 && !isDragging) {
+      if (longPressTimer.current) clearTimeout(longPressTimer.current)
+      setIsDragging(true)
+      hasDragged.current = true
+    }
+
+    if (!isDragging) return
+
+    e.currentTarget.setPointerCapture?.(e.pointerId)
+
+    const width = e.currentTarget.offsetWidth || 230
+    const height = e.currentTarget.offsetHeight || 56
+    const margin = 12
+
+    const newX = Math.max(margin, Math.min(window.innerWidth - width - margin, initialBtnPos.current.x + deltaX))
+    const newY = Math.max(margin, Math.min(window.innerHeight - height - margin, initialBtnPos.current.y + deltaY))
+
+    setPosition({ x: newX, y: newY })
+  }
+
+  const handlePointerUp = (e: React.PointerEvent<HTMLButtonElement>) => {
+    if (longPressTimer.current) clearTimeout(longPressTimer.current)
+    setIsPressing(false)
+
+    if (isDragging) {
+      setIsDragging(false)
+      const currentPos = position || initialBtnPos.current
+      const snapped = snapToNearestCorner(currentPos.x, currentPos.y)
+      setPosition(snapped)
+      try {
+        localStorage.setItem('voice_assistant_pos', JSON.stringify(snapped))
+      } catch {}
+      return
+    }
+
+    if (!hasDragged.current) {
+      setIsOpen(true)
+    }
+  }
+
+  const handlePointerCancel = () => {
+    if (longPressTimer.current) clearTimeout(longPressTimer.current)
+    setIsPressing(false)
+    setIsDragging(false)
+  }
+
+  const getContainerStyle = (): React.CSSProperties | undefined => {
+    if (!position) return undefined
+
+    if (!isOpen) {
+      return {
+        left: `${position.x}px`,
+        top: `${position.y}px`,
+        bottom: 'auto',
+        right: 'auto',
+        transition: isDragging ? 'none' : 'all 0.35s cubic-bezier(0.25, 1, 0.5, 1)'
+      }
+    }
+
+    const drawerWidth = typeof window !== 'undefined' && window.innerWidth < 640 ? 340 : 420
+    const drawerHeight = 540
+    const margin = 16
+
+    let drawerLeft = position.x
+    let drawerTop = position.y
+
+    if (typeof window !== 'undefined') {
+      if (drawerLeft + drawerWidth > window.innerWidth - margin) {
+        drawerLeft = window.innerWidth - drawerWidth - margin
+      }
+      if (drawerLeft < margin) {
+        drawerLeft = margin
+      }
+      if (drawerTop + drawerHeight > window.innerHeight - margin) {
+        drawerTop = window.innerHeight - drawerHeight - margin
+      }
+      if (drawerTop < margin) {
+        drawerTop = margin
+      }
+    }
+
+    return {
+      left: `${drawerLeft}px`,
+      top: `${drawerTop}px`,
+      bottom: 'auto',
+      right: 'auto'
+    }
+  }
 
   // Scroll chat to bottom
   useEffect(() => {
@@ -239,19 +393,62 @@ export default function VoiceAssistant() {
   }
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 font-sans">
-      {/* Floating Toggle Button */}
+    <div
+      style={getContainerStyle()}
+      className={`fixed ${!position ? 'bottom-6 right-6' : ''} z-50 font-sans`}
+    >
+      {/* Floating Toggle Button with Hover & Long-Press Dragging */}
       {!isOpen && (
-        <button
-          onClick={() => setIsOpen(true)}
-          className="bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-400 text-green-950 font-black px-5 py-3.5 rounded-full shadow-2xl flex items-center space-x-2 border-2 border-white hover:scale-105 active:scale-95 transition-all group"
-        >
-          <span className="text-xl group-hover:rotate-12 transition-transform">🎤</span>
-          <span className="text-xs tracking-tight uppercase">
-            {locale === 'hi' ? 'AI सहायता सह-पायलट' : locale === 'bn' ? 'AI ভয়েস সহকারী' : 'AI Voice Assistant'}
-          </span>
-          <span className="w-2.5 h-2.5 bg-green-900 rounded-full animate-ping"></span>
-        </button>
+        <div className="relative group select-none">
+          {/* Subtle helper tooltip */}
+          <div
+            className={`absolute -top-9 left-1/2 -translate-x-1/2 px-2.5 py-1 bg-slate-900/95 text-amber-300 text-[10px] font-bold rounded-lg shadow-xl border border-amber-400/30 whitespace-nowrap transition-all pointer-events-none ${
+              isDragging
+                ? 'opacity-100 scale-105'
+                : 'opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100'
+            }`}
+          >
+            {isDragging ? '📍 Move to any corner and release' : '👆 Long-press to move on screen'}
+          </div>
+
+          <button
+            ref={buttonRef}
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            onPointerCancel={handlePointerCancel}
+            title="Click to open or Long-press to move around the screen"
+            className={`bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-400 text-green-950 font-black px-5 py-3.5 rounded-full shadow-2xl flex items-center space-x-2 border-2 border-white select-none touch-none transition-transform duration-200 ${
+              isDragging
+                ? 'scale-110 ring-4 ring-yellow-400/80 shadow-amber-500/60 shadow-2xl cursor-grabbing'
+                : isPressing
+                ? 'scale-105 shadow-xl cursor-grab'
+                : 'hover:scale-105 hover:shadow-amber-500/50 hover:shadow-2xl active:scale-95 cursor-grab'
+            }`}
+          >
+            <span
+              className={`text-xl transition-transform duration-200 ${
+                isDragging ? 'rotate-45 scale-125' : 'group-hover:rotate-12'
+              }`}
+            >
+              {isDragging ? '📍' : '🎤'}
+            </span>
+            <span className="text-xs tracking-tight uppercase select-none">
+              {isDragging
+                ? 'Moving Assistant...'
+                : locale === 'hi'
+                ? 'AI सहायता सह-पायलट'
+                : locale === 'bn'
+                ? 'AI ভয়েস সহকারী'
+                : 'AI Voice Assistant'}
+            </span>
+            <span
+              className={`w-2.5 h-2.5 rounded-full ${
+                isDragging ? 'bg-red-600 animate-ping' : 'bg-green-900 animate-ping'
+              }`}
+            ></span>
+          </button>
+        </div>
       )}
 
       {/* Expandable Assistant Drawer Panel */}

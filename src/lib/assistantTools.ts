@@ -1,5 +1,5 @@
 import { connectToDatabase } from "@/lib/mongodb"
-import { User, FarmerProfile, ProcurementCentre, Slot, Booking, Procurement, Grievance, Notification } from "@/models"
+import { User, FarmerProfile, ProcurementCentre, Slot, Booking, Procurement, Payment, Grievance, Notification } from "@/models"
 import { getCentres, getSlots, createBooking } from "@/app/actions/booking"
 import { createGrievanceAction } from "@/app/actions/farmerActions"
 import mongoose from "mongoose"
@@ -115,13 +115,20 @@ export async function handleGetPaymentStatus(userId: string) {
   const farmerProfile = await FarmerProfile.findOne({ userId })
   if (!farmerProfile) return { totalReceived: 0, pending: 0 }
 
+  const payments = await Payment.find({ farmerId: farmerProfile._id }).lean()
+  let totalReceived = payments
+    .filter(p => p.status === 'SUCCESS' || p.status === 'COMPLETED')
+    .reduce((sum, p) => sum + p.amount, 0)
+
   const farmerBookings = await Booking.find({ farmerId: farmerProfile._id }).lean()
   const bookingIds = farmerBookings.map(b => b._id)
   const procurements = await Procurement.find({ bookingId: { $in: bookingIds } }).lean()
 
-  const totalReceived = procurements
-    .filter(p => (p.paymentStatus as string) === 'COMPLETED' || (p.paymentStatus as string) === 'SUCCESS')
-    .reduce((sum, p) => sum + Math.round(p.quantity * 2275), 0)
+  if (totalReceived === 0) {
+    totalReceived = procurements
+      .filter(p => (p.paymentStatus as string) === 'COMPLETED' || (p.paymentStatus as string) === 'SUCCESS')
+      .reduce((sum, p) => sum + Math.round(p.quantity * 2275), 0)
+  }
 
   const pending = procurements
     .filter(p => (p.paymentStatus as string) !== 'COMPLETED' && (p.paymentStatus as string) !== 'SUCCESS')

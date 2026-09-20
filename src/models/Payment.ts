@@ -8,7 +8,7 @@ export interface IPayment extends Document {
   mspRatePerQuintal: number
   bankAccountMasked: string
   ifscCode: string
-  status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED'
+  status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'SUCCESS' | 'FAILED'
   transactionId?: string
   paymentDate?: Date
   createdAt: Date
@@ -27,7 +27,7 @@ const PaymentSchema = new Schema<IPayment>(
     transactionId: { type: String, required: true, unique: true, index: true },
     status: {
       type: String,
-      enum: ['PENDING', 'PROCESSING', 'SUCCESS', 'FAILED'],
+      enum: ['PENDING', 'PROCESSING', 'COMPLETED', 'SUCCESS', 'FAILED'],
       default: 'PENDING',
       index: true
     },

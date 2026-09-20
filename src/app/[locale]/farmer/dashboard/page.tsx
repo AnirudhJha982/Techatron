@@ -77,28 +77,39 @@ export default async function FarmerDashboard({ params }: { params: Promise<{ lo
       .sort({ createdAt: -1 })
       .lean()
 
+    const procurementIds = procurements.map(p => p._id)
+    const rawPayments = await Payment.find({
+      $or: [
+        { farmerId: farmerProfile._id },
+        { procurementId: { $in: procurementIds } }
+      ]
+    }).sort({ createdAt: -1 }).lean()
+
     procurementListLoop: for (const p of procurements) {
       const b = farmerBookings.find(bk => bk._id.toString() === p.bookingId.toString())
       const centre = b ? await ProcurementCentre.findById(b.centreId).lean() : null
+      const matchedPayment = rawPayments.find(pm => pm.procurementId?.toString() === p._id.toString())
+      const isCompleted = p.paymentStatus === 'COMPLETED' || p.paymentStatus === 'SUCCESS' || matchedPayment?.status === 'SUCCESS' || matchedPayment?.status === 'COMPLETED'
       procurementsList.push({
         id: p._id.toString(),
         date: p.createdAt ? new Date(p.createdAt).toLocaleDateString() : 'Recent',
         crop: p.crop,
         quantity: p.quantity,
-        mspRate: 2275,
-        amount: Math.round(p.quantity * 2275),
-        paymentStatus: p.paymentStatus,
+        mspRate: matchedPayment?.mspRatePerQuintal || 2275,
+        amount: matchedPayment?.amount || Math.round(p.quantity * 2275),
+        paymentStatus: isCompleted ? 'COMPLETED' : p.paymentStatus,
         centreName: centre?.name || 'Mandi Samiti'
       })
     }
 
-    const payments = await Payment.find({ farmerId: farmerProfile._id }).sort({ createdAt: -1 }).lean()
-    if (payments.length > 0) {
-      latestPayment = payments[0]
-      totalReceived = payments
-        .filter(p => p.status === 'COMPLETED')
+    if (rawPayments.length > 0) {
+      latestPayment = rawPayments[0]
+      totalReceived = rawPayments
+        .filter(p => p.status === 'COMPLETED' || p.status === 'SUCCESS')
         .reduce((sum, p) => sum + p.amount, 0)
-    } else {
+    }
+
+    if (totalReceived === 0 && procurements.length > 0) {
       totalReceived = procurements
         .filter(p => (p.paymentStatus as string) === 'COMPLETED' || (p.paymentStatus as string) === 'SUCCESS')
         .reduce((acc, p) => acc + Math.round(p.quantity * 2275), 0)

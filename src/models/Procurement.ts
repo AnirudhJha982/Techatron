@@ -9,7 +9,7 @@ export interface IProcurement extends Document {
   qualityGrade: string
   moistureLevel?: number
   status: 'PENDING' | 'GRADED' | 'APPROVED' | 'REJECTED'
-  paymentStatus: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED'
+  paymentStatus: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'SUCCESS' | 'FAILED'
   remarks?: string
   createdAt: Date
   updatedAt: Date
@@ -32,7 +32,7 @@ const ProcurementSchema = new Schema<IProcurement>(
     },
     paymentStatus: {
       type: String,
-      enum: ['PENDING', 'PROCESSING', 'COMPLETED', 'FAILED'],
+      enum: ['PENDING', 'PROCESSING', 'COMPLETED', 'SUCCESS', 'FAILED'],
       default: 'PENDING',
       index: true
     },

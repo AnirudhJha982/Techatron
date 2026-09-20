@@ -84,19 +84,25 @@ async function ensureSeedData() {
       { name: 'Satish Verma', phone: '9876543206', village: 'Nawabganj', district: 'Bareilly', state: 'Uttar Pradesh', acres: 7.0, lang: 'hi' },
       { name: 'Manjeet Kaur', phone: '9876543207', village: 'Samrala', district: 'Ludhiana', state: 'Punjab', acres: 10.0, lang: 'pa' },
       { name: 'Devendra Choudhary', phone: '9876543208', village: 'Sangod', district: 'Kota', state: 'Rajasthan', acres: 4.5, lang: 'hi' },
-      { name: 'Anil Deshmukh', phone: '9876543209', village: 'Dindori', district: 'Nashik', state: 'Maharashtra', acres: 11.0, lang: 'mr' }
+      { name: 'Anil Deshmukh', phone: '9876543209', village: 'Dindori', district: 'Nashik', state: 'Maharashtra', acres: 11.0, lang: 'mr' },
+      { name: 'Anil Kapoor', phone: '1232145321', village: 'Nilokheri', district: 'Karnal', state: 'Haryana', acres: 8.0, lang: 'hi', password: '@anijha987' }
     ]
 
     for (const f of farmerAccounts) {
+      const accPasswordHash = (f as any).password ? bcrypt.hashSync((f as any).password, 10) : passwordHash
       let user = await User.findOne({ phoneNumber: f.phone })
       if (!user) {
         user = await User.create({
           name: f.name,
           phoneNumber: f.phone,
-          passwordHash,
+          passwordHash: accPasswordHash,
           role: 'FARMER',
           language: f.lang
         })
+      } else if ((f as any).password) {
+        user.passwordHash = accPasswordHash
+        user.name = f.name
+        await user.save()
       }
       const existingProfile = await FarmerProfile.findOne({ userId: user._id })
       if (!existingProfile) {

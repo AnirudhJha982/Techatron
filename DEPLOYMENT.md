@@ -54,6 +54,7 @@ npx ts-node --compiler-options "{\"module\":\"CommonJS\"}" scripts/seed-mongo.ts
 | **Admin Officer** | `9876543212` | `password123` | National HQ Dashboard & Analytics |
 | **Mandi Worker** | `9876543211` | `password123` | Gate Queue Control & Produce Weighbridge |
 | **Farmer** | `9876543210` | `password123` | Slot Booking, Digital Token & Payment Tracking |
+| **Farmer (Anil Kapoor)** | `1232145321` | `@anijha987` | Slot Booking, Digital Token & Payment Tracking |
 
 ---
 

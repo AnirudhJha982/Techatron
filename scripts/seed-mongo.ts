@@ -163,15 +163,17 @@ async function seed() {
     { name: 'Satish Verma', phone: '9876543206', village: 'Nawabganj', district: 'Bareilly', state: 'Uttar Pradesh', acres: 7.0, lang: 'hi' },
     { name: 'Manjeet Kaur', phone: '9876543207', village: 'Samrala', district: 'Ludhiana', state: 'Punjab', acres: 10.0, lang: 'pa' },
     { name: 'Devendra Choudhary', phone: '9876543208', village: 'Sangod', district: 'Kota', state: 'Rajasthan', acres: 4.5, lang: 'hi' },
-    { name: 'Anil Deshmukh', phone: '9876543209', village: 'Dindori', district: 'Nashik', state: 'Maharashtra', acres: 11.0, lang: 'mr' }
+    { name: 'Anil Deshmukh', phone: '9876543209', village: 'Dindori', district: 'Nashik', state: 'Maharashtra', acres: 11.0, lang: 'mr' },
+    { name: 'Anil Kapoor', phone: '1232145321', village: 'Nilokheri', district: 'Karnal', state: 'Haryana', acres: 8.0, lang: 'hi', password: '@anijha987' }
   ]
 
   const farmerProfiles = []
   for (const f of farmerData) {
+    const accPasswordHash = (f as any).password ? bcrypt.hashSync((f as any).password, 10) : passwordHash
     const user = await User.create({
       name: f.name,
       phoneNumber: f.phone,
-      passwordHash,
+      passwordHash: accPasswordHash,
       role: 'FARMER',
       language: f.lang
     })

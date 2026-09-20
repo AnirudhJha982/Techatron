@@ -4,7 +4,8 @@ import { connectToDatabase } from "@/lib/mongodb"
 import { ProcurementCentre, Slot, Grievance, Notification, AuditLog, User, FarmerProfile } from "@/models"
 import { auth } from "@/auth"
 import { revalidatePath } from "next/cache"
-import { isValidState } from "@/lib/constants/india"
+import mongoose from "mongoose"
+import { validatePhone, isValidState, PHONE_ERROR_MESSAGE } from "@/lib/constants/india"
 
 export async function toggleUserStatusAction(userId: string, isActive: boolean) {
   const session = await auth()
@@ -235,4 +236,75 @@ export async function deleteCentreAction(centreId: string) {
   revalidatePath('/centres')
   return { success: true }
 }
+
+export async function updateFarmerAction(userId: string, data: {
+  name: string
+  phoneNumber?: string
+  village?: string
+  district?: string
+  state?: string
+  landSizeAcres?: number
+  kycStatus?: 'NOT_VERIFIED' | 'PENDING' | 'VERIFIED' | 'REJECTED'
+  bookingEligible?: boolean
+  isActive?: boolean
+}) {
+  const session = await auth()
+  if (!session || session.user?.role !== 'ADMIN') {
+    throw new Error("Unauthorized Admin Action")
+  }
+
+  await connectToDatabase()
+  const user = await User.findById(userId)
+  if (!user) throw new Error("Farmer not found")
+
+  if (!data.name) {
+    throw new Error("Farmer name is required.")
+  }
+
+  if (data.phoneNumber && !validatePhone(data.phoneNumber)) {
+    throw new Error(PHONE_ERROR_MESSAGE)
+  }
+
+  if (data.state && !isValidState(data.state)) {
+    throw new Error("Please select a valid Indian state from the dropdown.")
+  }
+
+  if (data.phoneNumber) {
+    const existingPhone = await User.findOne({ phoneNumber: data.phoneNumber, _id: { $ne: userId } })
+    if (existingPhone) {
+      throw new Error("Phone number already in use by another user.")
+    }
+  }
+
+  await User.findByIdAndUpdate(userId, {
+    name: data.name,
+    phoneNumber: data.phoneNumber || undefined,
+    isActive: data.isActive !== undefined ? data.isActive : true
+  })
+
+  await FarmerProfile.findOneAndUpdate(
+    { userId: new mongoose.Types.ObjectId(userId) },
+    {
+      village: data.village,
+      district: data.district,
+      state: data.state,
+      address: `Village ${data.village || ''}, ${data.district || ''}, ${data.state || ''}`.trim(),
+      landSizeAcres: data.landSizeAcres !== undefined ? Number(data.landSizeAcres) : undefined,
+      kycStatus: data.kycStatus || 'NOT_VERIFIED',
+      bookingEligible: data.bookingEligible !== undefined ? data.bookingEligible : (data.kycStatus === 'VERIFIED'),
+      ...(data.kycStatus === 'VERIFIED' ? { farmerIdVerified: true, mobileVerified: true } : {})
+    },
+    { upsert: true }
+  )
+
+  await AuditLog.create({
+    userId: session.user.id,
+    action: "FARMER_UPDATED",
+    details: `Farmer '${data.name}' (${data.phoneNumber || userId.slice(-6)}) details updated by admin`
+  })
+
+  revalidatePath('/admin/farmers')
+  return { success: true }
+}
+
 

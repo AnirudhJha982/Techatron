@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { toggleWorkerStatus, resetWorkerPassword, createWorker, deleteWorker } from '@/app/actions/adminWorker'
+import { toggleWorkerStatus, resetWorkerPassword, createWorker, deleteWorker, updateWorker } from '@/app/actions/adminWorker'
 import StateSelect from '@/components/ui/StateSelect'
 import PhoneInput from '@/components/ui/PhoneInput'
 
@@ -21,6 +21,8 @@ export default function WorkerTable({
   const [resetId, setResetId] = useState<string | null>(null)
   const [createdCredentials, setCreatedCredentials] = useState<{username: string, password: string} | null>(null)
   const [workerPhone, setWorkerPhone] = useState('')
+  const [editingWorker, setEditingWorker] = useState<any | null>(null)
+  const [editPhone, setEditPhone] = useState('')
 
   const handleToggleStatus = async (userId: string, currentStatus: boolean) => {
     if (!confirm(`Are you sure you want to ${currentStatus ? 'deactivate' : 'activate'} this worker?`)) return
@@ -38,6 +40,28 @@ export default function WorkerTable({
     setLoading(true)
     try {
       await deleteWorker(userId)
+    } catch (e: any) {
+      alert(e.message)
+    }
+    setLoading(false)
+  }
+
+  const handleUpdateWorker = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    if (!editingWorker) return
+    setLoading(true)
+    const formData = new FormData(e.currentTarget)
+    try {
+      await updateWorker(editingWorker.id, {
+        name: formData.get("name") as string,
+        username: formData.get("username") as string,
+        phoneNumber: editPhone || undefined,
+        state: formData.get("state") as string,
+        centreId: (formData.get("centreId") as string) || undefined,
+        isActive: formData.get("isActive") === "true"
+      })
+      alert("Worker details updated successfully!")
+      setEditingWorker(null)
     } catch (e: any) {
       alert(e.message)
     }
@@ -198,6 +222,66 @@ export default function WorkerTable({
         </Card>
       )}
 
+      {editingWorker && (
+        <Card className="bg-white shadow-md border-blue-200 border-2">
+          <CardHeader className="bg-blue-50 border-b border-blue-100 flex flex-row items-center justify-between">
+            <div>
+              <CardTitle className="text-lg font-bold text-blue-950">Edit Worker: {editingWorker.name}</CardTitle>
+              <p className="text-xs text-blue-700 mt-0.5">Update worker credentials, assigned mandi, state, and account status</p>
+            </div>
+            <Button variant="ghost" size="sm" onClick={() => setEditingWorker(null)} className="text-blue-800 hover:bg-blue-100">✕</Button>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <form onSubmit={handleUpdateWorker} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Full Name *</Label>
+                  <Input name="name" defaultValue={editingWorker.name} required />
+                </div>
+                <div className="space-y-2">
+                  <Label>Worker ID (Username) *</Label>
+                  <Input name="username" defaultValue={editingWorker.username} required />
+                </div>
+                <div className="space-y-2">
+                  <Label>Mobile Number</Label>
+                  <PhoneInput
+                    name="phoneNumber"
+                    value={editPhone}
+                    onChange={setEditPhone}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Account Status</Label>
+                  <select name="isActive" defaultValue={editingWorker.isActive ? "true" : "false"} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background">
+                    <option value="true">Active (Can log in & manage mandi)</option>
+                    <option value="false">Inactive / Deactivated</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Worker State *</Label>
+                  <StateSelect name="state" defaultValue={editingWorker.state} required />
+                </div>
+                <div className="space-y-2">
+                  <Label>Assign to Mandi (Optional)</Label>
+                  <select name="centreId" defaultValue={editingWorker.centreId || ""} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background">
+                    <option value="">-- No Mandi Assigned --</option>
+                    {centres.map(c => (
+                      <option key={c.id} value={c.id}>{c.name} ({c.district}, {c.state})</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div className="flex justify-end gap-3 pt-4">
+                <Button type="button" variant="outline" onClick={() => setEditingWorker(null)}>Cancel</Button>
+                <Button type="submit" disabled={loading} className="bg-blue-700 hover:bg-blue-800 text-white font-bold">
+                  {loading ? 'Saving Changes...' : 'Save Changes'}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      )}
+
       {resetId && (
         <Card className="bg-white shadow-md border-amber-200 border-2">
           <CardHeader className="bg-amber-50 border-b border-amber-100">
@@ -248,6 +332,9 @@ export default function WorkerTable({
                       </span>
                     </td>
                     <td className="p-3 flex gap-2">
+                      <Button size="sm" variant="outline" className="h-7 text-[10px] text-blue-700 border-blue-200 hover:bg-blue-50" onClick={() => { setEditingWorker(w); setEditPhone(w.phoneNumber || ''); setShowCreate(false); setResetId(null); }} disabled={loading}>
+                        Edit
+                      </Button>
                       <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={() => handleToggleStatus(w.id, w.isActive)} disabled={loading}>
                         {w.isActive ? 'Deactivate' : 'Activate'}
                       </Button>

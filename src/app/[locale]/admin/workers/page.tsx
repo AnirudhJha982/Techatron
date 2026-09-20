@@ -26,8 +26,9 @@ export default async function AdminWorkersPage() {
         phoneNumber: w.phoneNumber || '',
         isActive: w.isActive !== false,
         centreName: centre?.name || 'Unassigned',
+        centreId: profile?.centreId ? profile.centreId.toString() : '',
         district: centre?.district || '',
-        state: centre?.state || ''
+        state: profile?.state || centre?.state || ''
       }
     })
   )

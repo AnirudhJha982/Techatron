@@ -139,3 +139,63 @@ export async function deleteWorker(userId: string) {
   return { success: true }
 }
 
+export async function updateWorker(userId: string, data: {
+  name: string
+  phoneNumber?: string
+  username: string
+  state: string
+  centreId?: string
+  isActive?: boolean
+}) {
+  const session = await auth()
+  if (!session || session.user?.role !== 'ADMIN') {
+    throw new Error('Unauthorized. Admin access required.')
+  }
+
+  await connectToDatabase()
+
+  if (!data.name || !data.username) {
+    throw new Error('Worker Name and Worker ID (Username) are required.')
+  }
+
+  if (data.phoneNumber && !validatePhone(data.phoneNumber)) {
+    throw new Error(PHONE_ERROR_MESSAGE)
+  }
+
+  if (data.state && !isValidState(data.state)) {
+    throw new Error('Please select a valid Indian state from the dropdown.')
+  }
+
+  const existingUsername = await User.findOne({ username: data.username, _id: { $ne: userId } })
+  if (existingUsername) {
+    throw new Error('Worker ID already in use by another user.')
+  }
+
+  if (data.phoneNumber) {
+    const existingPhone = await User.findOne({ phoneNumber: data.phoneNumber, _id: { $ne: userId } })
+    if (existingPhone) {
+      throw new Error('Phone number already in use by another user.')
+    }
+  }
+
+  await User.findByIdAndUpdate(userId, {
+    name: data.name,
+    username: data.username,
+    phoneNumber: data.phoneNumber || undefined,
+    isActive: data.isActive !== undefined ? data.isActive : true
+  })
+
+  await WorkerProfile.findOneAndUpdate(
+    { userId: new mongoose.Types.ObjectId(userId) },
+    {
+      state: data.state,
+      centreId: data.centreId ? new mongoose.Types.ObjectId(data.centreId) : undefined
+    },
+    { upsert: true }
+  )
+
+  revalidatePath('/admin/workers')
+  return { success: true }
+}
+
+

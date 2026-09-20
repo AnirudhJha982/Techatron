@@ -23,10 +23,14 @@ export const STATE_TO_LANGUAGE: Record<string, string> = {
   'Sikkim': 'ne',
   'Tamil Nadu': 'ta',
   'Telangana': 'te',
-  'Tripura': 'bn',
+  'Tripura': 'en',
   'Uttar Pradesh': 'hi',
   'Uttarakhand': 'hi',
-  'West Bengal': 'bn',
+  'West Bengal': 'en',
+  'Paschim Banga': 'en',
+  'WB': 'en',
+  'W.B.': 'en',
+  'Bengal': 'en',
   // Union Territories
   'Delhi': 'hi',
   'Jammu and Kashmir': 'ks',
@@ -41,7 +45,6 @@ export const STATE_TO_LANGUAGE: Record<string, string> = {
 export const LANGUAGE_NAMES: Record<string, { native: string; english: string }> = {
   en: { native: "English", english: "English" },
   hi: { native: "हिन्दी", english: "Hindi" },
-  bn: { native: "বাংলা", english: "Bengali" },
   as: { native: "অসমীয়া", english: "Assamese" },
   or: { native: "ଓଡ଼ିଆ", english: "Odia" },
   mr: { native: "मराठी", english: "Marathi" },
@@ -95,7 +98,8 @@ export function resolveUserEffectiveLanguage(
   // 2. State-based automatic regional language for Farmers
   if (user.role === 'FARMER' && farmerProfile?.state) {
     const rawState = farmerProfile.state.trim()
-    const mappedLang = STATE_TO_LANGUAGE[rawState]
+    const mappedLang = STATE_TO_LANGUAGE[rawState] || 
+      Object.entries(STATE_TO_LANGUAGE).find(([k]) => k.toLowerCase() === rawState.toLowerCase())?.[1]
     if (mappedLang) {
       return mappedLang
     }
@@ -112,7 +116,8 @@ export function getLanguageSourceInfo(
   const effectiveLang = resolveUserEffectiveLanguage(user, farmerProfile)
   const isManual = !!(user?.isManualLanguage && (user?.preferredLanguage || user?.language))
   const stateName = farmerProfile?.state || undefined
-  const isDerivedFromState = !isManual && user?.role === 'FARMER' && !!stateName && !!STATE_TO_LANGUAGE[stateName]
+  const matchedLang = stateName ? (STATE_TO_LANGUAGE[stateName.trim()] || Object.entries(STATE_TO_LANGUAGE).find(([k]) => k.toLowerCase() === stateName.trim().toLowerCase())?.[1]) : null
+  const isDerivedFromState = !isManual && user?.role === 'FARMER' && !!stateName && !!matchedLang
 
   return {
     effectiveLang,

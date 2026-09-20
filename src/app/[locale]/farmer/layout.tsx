@@ -1,4 +1,5 @@
-import { auth, signOut } from "@/auth"
+import { auth } from "@/auth"
+import { doSignOut } from "@/app/actions/auth"
 import { redirect } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -8,6 +9,7 @@ import mongoose from "mongoose"
 import LanguageSwitcher from "@/components/LanguageSwitcher"
 import MandiMargLogo from "@/components/MandiMargLogo"
 import { getTranslations } from 'next-intl/server'
+import SyncIndicator from "@/components/SyncIndicator"
 
 export default async function FarmerLayout({
   children,
@@ -33,10 +35,14 @@ export default async function FarmerLayout({
   const tCommon = await getTranslations({ locale, namespace: 'Common' })
 
   // Unread notifications count from MongoDB
-  await connectToDatabase()
   let unreadCount = 0
-  if (session?.user?.id && mongoose.Types.ObjectId.isValid(session.user.id)) {
-    unreadCount = await Notification.countDocuments({ userId: session.user.id, isRead: false })
+  try {
+    await connectToDatabase()
+    if (session?.user?.id && mongoose.Types.ObjectId.isValid(session.user.id)) {
+      unreadCount = await Notification.countDocuments({ userId: session.user.id, isRead: false })
+    }
+  } catch (err) {
+    console.error("Database connection failed (offline):", err)
   }
 
   const navItems = [
@@ -90,7 +96,7 @@ export default async function FarmerLayout({
         <div className="p-4 border-t border-emerald-900/60 bg-[#082b1b]/80 m-3 rounded-2xl">
           <div className="flex items-center space-x-3 text-xs text-yellow-300 font-bold mb-1">
             <span className="text-lg">🎙️</span>
-            <span>AI Voice Assistant</span>
+            <span>{tCommon('aiVoiceAssistant')}</span>
           </div>
           <p className="text-[10px] text-emerald-200 leading-snug">Ask anything in your spoken regional language</p>
         </div>
@@ -102,11 +108,12 @@ export default async function FarmerLayout({
         <header className="bg-[#f7f5ee] border-b border-[#e2decb] px-6 py-4 flex flex-wrap justify-between items-center gap-4">
           <div className="flex items-center space-x-2">
             <span className="text-xs font-bold text-[#0c3823] bg-emerald-100/80 px-2.5 py-1 rounded-md border border-emerald-200">
-              Government of India • Ministry of Agriculture
+              {tCommon('govIndia')}
             </span>
           </div>
 
           <div className="flex items-center space-x-4">
+            <SyncIndicator />
             <LanguageSwitcher />
 
             <Link href={`/${locale}/farmer/notifications`} className="relative p-2 bg-white hover:bg-slate-50 border border-[#dcd6c5] rounded-xl text-slate-700 shadow-sm transition-colors">
@@ -124,14 +131,11 @@ export default async function FarmerLayout({
               </div>
               <div className="text-left">
                 <p className="text-xs font-black text-[#0c3823] leading-tight">{session.user.name}</p>
-                <p className="text-[9px] font-bold text-slate-500">Farmer Account</p>
+                <p className="text-[9px] font-bold text-slate-500">{tCommon('farmerAccount')}</p>
               </div>
             </div>
 
-            <form action={async () => {
-              "use server"
-              await signOut({ redirectTo: `/${locale}/login` })
-            }}>
+            <form action={doSignOut.bind(null, `/${locale}/login`)}>
               <Button variant="outline" type="submit" size="sm" className="bg-red-50 hover:bg-red-100 text-red-700 border-red-200 font-bold text-xs h-9 rounded-xl">
                 {tCommon('logout')}
               </Button>

@@ -1,4 +1,5 @@
-import { auth, signOut } from "@/auth"
+import { auth } from "@/auth"
+import { doSignOut } from "@/app/actions/auth"
 import { redirect } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -65,10 +66,7 @@ export default async function AdminLayout({
               <span className="text-xs font-bold text-slate-200">{session.user.name}</span>
             </div>
 
-            <form action={async () => {
-              "use server"
-              await signOut({ redirectTo: `/${locale}/login` })
-            }}>
+            <form action={doSignOut.bind(null, `/${locale}/login`)}>
               <Button variant="secondary" type="submit" size="sm" className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs h-8">
                 {tCommon('logout')}
               </Button>

@@ -19,12 +19,16 @@ export const metadata: Metadata = {
   title: "Mandi Marg | Digital Agricultural Procurement",
   description: "Mandi Marg is a digital platform connecting farmers with mandis for transparent and efficient agricultural procurement.",
   applicationName: "Mandi Marg",
+  manifest: "/manifest.json",
   openGraph: {
     title: "Mandi Marg | Digital Agricultural Procurement",
     description: "Mandi Marg is a digital platform connecting farmers with mandis for transparent and efficient agricultural procurement.",
     siteName: "Mandi Marg"
   }
 };
+
+import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
+import { SyncProvider } from "@/components/SyncProvider";
 
 export default async function RootLayout(
   props: {
@@ -51,8 +55,11 @@ export default async function RootLayout(
     >
       <body className="min-h-full flex flex-col">
         <NextIntlClientProvider messages={messages}>
-          {children}
-          <VoiceAssistant />
+          <SyncProvider>
+            <ServiceWorkerRegister />
+            {children}
+            <VoiceAssistant />
+          </SyncProvider>
         </NextIntlClientProvider>
       </body>
     </html>

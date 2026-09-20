@@ -45,7 +45,7 @@ export default async function CentresPage({ params, searchParams }: { params: Pr
     })
   );
 
-  const states = ["Haryana", "Maharashtra", "Punjab", "Rajasthan", "Uttar Pradesh"];
+  const states = ["Andhra Pradesh", "Assam", "Bihar", "Gujarat", "Haryana", "Madhya Pradesh", "Maharashtra", "Odisha", "Punjab", "Rajasthan", "Tripura", "Uttar Pradesh", "West Bengal"];
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">

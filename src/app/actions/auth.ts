@@ -1,6 +1,6 @@
 "use server"
 
-import { signIn } from "@/auth"
+import { signIn, signOut } from "@/auth"
 import { AuthError } from "next-auth"
 import { connectToDatabase } from "@/lib/mongodb"
 import { User, FarmerProfile, Notification } from "@/models"
@@ -59,6 +59,10 @@ export async function authenticate(
   }
 }
 
+export async function doSignOut(redirectTo: string) {
+  await signOut({ redirectTo })
+}
+
 export async function registerFarmer(formData: FormData) {
   const name = formData.get("name") as string
   const rawPhone = formData.get("phoneNumber") as string
@@ -83,13 +87,16 @@ export async function registerFarmer(formData: FormData) {
 
   const passwordHash = await bcrypt.hash(password, 10)
 
+  const { STATE_TO_LANGUAGE } = await import('@/lib/languageResolver')
+  const initialLang = (state && STATE_TO_LANGUAGE[state.trim()]) || "en"
+
   // Create User
   const user = await User.create({
     name,
     phoneNumber,
     passwordHash,
     role: "FARMER",
-    language: "en",
+    language: initialLang,
     isManualLanguage: false
   })
 

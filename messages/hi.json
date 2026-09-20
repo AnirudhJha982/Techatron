@@ -2,6 +2,9 @@
   "Common": {
     "appName": "मंडी मार्ग (Mandi Marg)",
     "department": "कृषि खरीद विभाग",
+    "govIndia": "भारत सरकार • कृषि मंत्रालय",
+    "aiVoiceAssistant": "AI वॉयस असिस्टेंट",
+    "farmerAccount": "किसान खाता",
     "welcome": "मंडी मार्ग (Mandi Marg) पर आपका स्वागत है",
     "login": "लॉगिन",
     "register": "किसान पंजीकरण",
@@ -268,5 +271,13 @@
     "back": "← पीछे जाएं",
     "goToDashboard": "डैशबोर्ड पर जाएं",
     "trackLiveQueue": "लाइव कतार देखें →"
+  },
+  "Notifications": {
+    "title": "सूचना केंद्र",
+    "subtitle": "आपके टोकन, कतार की स्थिति और DBT भुगतान के संबंध में आधिकारिक सूचनाएं",
+    "clearAll": "सभी साफ़ करें 🗑️",
+    "logTitle": "सूचना लॉग",
+    "noNotifications": "अभी तक कोई सूचना प्राप्त नहीं हुई है।",
+    "markRead": "पढ़ा हुआ चिह्नित करें ✓"
   }
 }

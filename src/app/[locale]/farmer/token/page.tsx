@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import mongoose from "mongoose"
 import { getTranslations } from 'next-intl/server'
+import { translateCentre } from "@/lib/translateEntity"
 
 export default async function FarmerTokenPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params
@@ -27,8 +28,8 @@ export default async function FarmerTokenPage({ params }: { params: Promise<{ lo
     }).sort({ date: 1 }).lean()
 
     if (rawBooking) {
-      const centre = await ProcurementCentre.findById(rawBooking.centreId).lean()
-      const slot = await Slot.findById(rawBooking.slotId).lean()
+      const centre = await b_centre(rawBooking.centreId)
+      const slot = await b_slot(rawBooking.slotId)
       activeBookingData = {
         tokenNumber: rawBooking.tokenNumber,
         status: rawBooking.status,
@@ -38,6 +39,13 @@ export default async function FarmerTokenPage({ params }: { params: Promise<{ lo
         timeSlot: slot?.timeSlot || 'Morning'
       }
     }
+  }
+
+  async function b_centre(centreId: any) {
+    return centreId && mongoose.Types.ObjectId.isValid(centreId.toString()) ? await ProcurementCentre.findById(centreId).lean() : null
+  }
+  async function b_slot(slotId: any) {
+    return slotId && mongoose.Types.ObjectId.isValid(slotId.toString()) ? await Slot.findById(slotId).lean() : null
   }
 
   return (
@@ -75,7 +83,7 @@ export default async function FarmerTokenPage({ params }: { params: Promise<{ lo
               </div>
               <div>
                 <p className="text-green-300">{tToken('procurementMandi')}:</p>
-                <p className="font-bold text-white text-sm">{activeBookingData.centreName}</p>
+                <p className="font-bold text-white text-sm">{translateCentre(activeBookingData.centreName, locale)}</p>
               </div>
               <div>
                 <p className="text-green-300">{tToken('allocatedTimeSlot')}:</p>

@@ -42,14 +42,39 @@ async function ensureSeedData() {
         capacityPerDay: 500,
         isActive: true
       })
+      await ProcurementCentre.create({
+        name: 'West Bengal State Agricultural Marketing Board - Siliguri',
+        state: 'West Bengal',
+        district: 'Siliguri',
+        address: 'Hill Cart Road, Siliguri - 734001',
+        capacityPerDay: 550,
+        isActive: true
+      })
+      await ProcurementCentre.create({
+        name: 'Kolkata APMC Main Yard - Barasat',
+        state: 'West Bengal',
+        district: 'North 24 Parganas',
+        address: 'Jessore Road, Barasat - 700124',
+        capacityPerDay: 500,
+        isActive: true
+      })
+      await ProcurementCentre.create({
+        name: 'Tripura Apex Agricultural Marketing Centre - Agartala',
+        state: 'Tripura',
+        district: 'West Tripura',
+        address: 'GB Bazaar, Agartala - 799001',
+        capacityPerDay: 400,
+        isActive: true
+      })
       defaultCentreId = centre._id
     } else {
       const c: any = await ProcurementCentre.findOne().lean()
       defaultCentreId = c?._id
     }
 
-    // Demo Farmers Data (10 Accounts)
+    // Demo Farmers Data (11 Accounts)
     const farmerAccounts = [
+      { name: 'Subhash Biswas', phone: '9876543211', village: 'Barasat', district: 'North 24 Parganas', state: 'West Bengal', acres: 7.5, lang: 'bn' },
       { name: 'Ramesh Singh', phone: '9876543210', village: 'Nilokheri', district: 'Karnal', state: 'Haryana', acres: 8.5, lang: 'hi' },
       { name: 'Gurpreet Singh', phone: '9876543201', village: 'Jagraon', district: 'Ludhiana', state: 'Punjab', acres: 12.0, lang: 'pa' },
       { name: 'Baldev Sharma', phone: '9876543202', village: 'Ladwa', district: 'Kurukshetra', state: 'Haryana', acres: 6.0, lang: 'hi' },

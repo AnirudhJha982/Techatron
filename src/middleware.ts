@@ -7,7 +7,7 @@ import { authConfig } from "./auth.config"
 const { auth } = NextAuth(authConfig)
 
 export const locales = [
-  'en', 'hi', 'bn', 'as', 'or', 'mr', 'gu', 'pa', 'ta', 'te', 'kn', 'ml', 'ur',
+  'en', 'hi', 'as', 'or', 'mr', 'gu', 'pa', 'ta', 'te', 'kn', 'ml', 'ur',
   'sa', 'mai', 'sat', 'ks', 'ne', 'kok', 'sd', 'doi', 'brx', 'mni'
 ]
 
@@ -37,5 +37,5 @@ export default auth((req) => {
 })
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|sw.js|manifest.json).*)'],
 }

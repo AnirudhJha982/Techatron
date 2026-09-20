@@ -17,7 +17,10 @@ export async function getCentres() {
         { name: 'Anaj Mandi - Ludhiana East', state: 'Punjab', district: 'Ludhiana', address: 'Ferozepur Road, Ludhiana - 141001', capacityPerDay: 600, isActive: true },
         { name: 'Krishi Upaj Mandi - Kota Central', state: 'Rajasthan', district: 'Kota', address: 'Industrial Area, Kota - 324005', capacityPerDay: 450, isActive: true },
         { name: 'APMC Mandi - Nashik Road', state: 'Maharashtra', district: 'Nashik', address: 'Panchavati, Nashik - 422003', capacityPerDay: 400, isActive: true },
-        { name: 'Mandi Parishad - Bareilly City', state: 'Uttar Pradesh', district: 'Bareilly', address: 'Pilibhit Bypass Road, Bareilly - 243006', capacityPerDay: 500, isActive: true }
+        { name: 'Mandi Parishad - Bareilly City', state: 'Uttar Pradesh', district: 'Bareilly', address: 'Pilibhit Bypass Road, Bareilly - 243006', capacityPerDay: 500, isActive: true },
+        { name: 'West Bengal State Agricultural Marketing Board - Siliguri', state: 'West Bengal', district: 'Siliguri', address: 'Hill Cart Road, Siliguri - 734001', capacityPerDay: 550, isActive: true },
+        { name: 'Kolkata APMC Main Yard - Barasat', state: 'West Bengal', district: 'North 24 Parganas', address: 'Jessore Road, Barasat - 700124', capacityPerDay: 500, isActive: true },
+        { name: 'Tripura Apex Agricultural Marketing Centre - Agartala', state: 'Tripura', district: 'West Tripura', address: 'GB Bazaar, Agartala - 799001', capacityPerDay: 400, isActive: true }
       ]
       for (const c of defaultCentres) {
         await ProcurementCentre.create(c)
@@ -46,8 +49,7 @@ export async function getSlots(centreId: string, dateStr: string) {
   try {
     await connectToDatabase()
     const validDate = dateStr && !isNaN(Date.parse(dateStr)) ? dateStr : new Date().toISOString().split('T')[0]
-    const dateObj = new Date(validDate)
-    dateObj.setHours(0, 0, 0, 0)
+    const dateObj = new Date(validDate + 'T00:00:00.000Z')
 
     let slots = await Slot.find({
       centreId,
@@ -95,7 +97,7 @@ export async function getSlots(centreId: string, dateStr: string) {
   }
 }
 
-export async function createBooking(slotId: string, centreId: string, dateStr: string) {
+export async function createBooking(slotId: string, centreId: string, dateStr: string, operationId?: string) {
   const session = await auth()
   if (!session || !session.user) {
     throw new Error("Unauthorized. Please login first.")
@@ -103,14 +105,26 @@ export async function createBooking(slotId: string, centreId: string, dateStr: s
 
   await connectToDatabase()
 
+  const validDate = dateStr && !isNaN(Date.parse(dateStr)) ? dateStr : new Date().toISOString().split('T')[0]
+  const dateObj = new Date(validDate + 'T00:00:00.000Z')
+
+  if (operationId) {
+    const existing = await Booking.findOne({ operationId });
+    if (existing) {
+      return {
+        _id: existing._id.toString(),
+        tokenNumber: existing.tokenNumber,
+        queuePosition: existing.queuePosition,
+        date: validDate,
+        status: existing.status
+      };
+    }
+  }
+
   let farmerProfile = await FarmerProfile.findOne({ userId: session.user.id })
   if (!farmerProfile || !farmerProfile.bookingEligible || farmerProfile.kycStatus !== 'VERIFIED') {
     throw new Error("Slot booking is restricted to verified farmers. Please complete your Farmer Verification (KYC) on your profile first.")
   }
-
-  const validDate = dateStr && !isNaN(Date.parse(dateStr)) ? dateStr : new Date().toISOString().split('T')[0]
-  const dateObj = new Date(validDate)
-  dateObj.setHours(0, 0, 0, 0)
 
   // ATOMIC CONCURRENCY CONTROL:
   let updatedSlot = null
@@ -139,7 +153,8 @@ export async function createBooking(slotId: string, centreId: string, dateStr: s
     date: dateObj,
     tokenNumber,
     queuePosition: existingCount + 1,
-    status: "ARRIVED"
+    status: "SCHEDULED",
+    operationId
   })
 
   // Create notification
@@ -151,8 +166,15 @@ export async function createBooking(slotId: string, centreId: string, dateStr: s
   })
 
   revalidatePath('/farmer/dashboard')
-  revalidatePath('/farmer/booking')
   revalidatePath('/farmer/queue')
+  revalidatePath('/farmer/history')
+  revalidatePath('/farmer/token')
 
-  return JSON.parse(JSON.stringify(booking))
+  return {
+    _id: booking._id.toString(),
+    tokenNumber: booking.tokenNumber,
+    queuePosition: booking.queuePosition,
+    date: validDate,
+    status: booking.status
+  }
 }

@@ -6,6 +6,7 @@ export interface IBooking extends Document {
   slotId: mongoose.Types.ObjectId
   date: Date
   tokenNumber: string
+  operationId?: string
   queuePosition?: number
   status: 'SCHEDULED' | 'ARRIVED' | 'PROCESSING' | 'COMPLETED' | 'CANCELLED'
   createdAt: Date
@@ -19,6 +20,7 @@ const BookingSchema = new Schema<IBooking>(
     slotId: { type: Schema.Types.ObjectId, ref: 'Slot', required: true, index: true },
     date: { type: Date, required: true, index: true },
     tokenNumber: { type: String, required: true, unique: true, index: true },
+    operationId: { type: String, sparse: true, unique: true, index: true },
     queuePosition: { type: Number },
     status: {
       type: String,

@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl'
 import { usePathname } from 'next/navigation'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { getCentres, getSlots, createBooking } from '@/app/actions/booking'
+import { getCentresOffline, getSlotsOffline, createBookingOffline } from '@/lib/offline/booking'
 import { translateCentre, translateState } from '@/lib/translateEntity'
 import Link from 'next/link'
 
@@ -35,7 +35,7 @@ export default function BookingWizardPage() {
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    getCentres().then(data => {
+    getCentresOffline().then(data => {
       if (Array.isArray(data)) {
         setCentres(data)
         if (data.length > 0) setSelectedCentre(data[0])
@@ -48,7 +48,7 @@ export default function BookingWizardPage() {
   useEffect(() => {
     if (selectedCentre && selectedDate) {
       setLoading(true)
-      getSlots(selectedCentre.id, selectedDate).then(fetchedSlots => {
+      getSlotsOffline(selectedCentre.id, selectedDate).then(fetchedSlots => {
         if (Array.isArray(fetchedSlots)) {
           setSlots(fetchedSlots)
           if (fetchedSlots.length > 0) setSelectedSlot(fetchedSlots[0])
@@ -66,7 +66,7 @@ export default function BookingWizardPage() {
     if (!selectedSlot || !selectedCentre || !selectedDate) return
     setLoading(true)
     try {
-      const res = await createBooking(selectedSlot.id, selectedCentre.id, selectedDate)
+      const res = await createBookingOffline(selectedSlot.id, selectedCentre.id, selectedDate)
       setBookingResult(res)
       setStep(5)
     } catch (err: any) {

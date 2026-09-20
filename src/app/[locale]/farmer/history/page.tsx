@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import mongoose from "mongoose"
 import { getTranslations } from 'next-intl/server'
 
+import { translateCentre } from "@/lib/translateEntity"
+
 export default async function FarmerHistoryPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params
   const session = await auth()
@@ -25,16 +27,20 @@ export default async function FarmerHistoryPage({ params }: { params: Promise<{ 
 
     historyData = await Promise.all(
       rawBookings.map(async (b) => {
-        const centre = await ProcurementCentre.findById(b.centreId).lean()
-        const slot = await Slot.findById(b.slotId).lean()
+        const centre = b.centreId && mongoose.Types.ObjectId.isValid(b.centreId.toString())
+          ? await ProcurementCentre.findById(b.centreId).lean()
+          : null
+        const slot = b.slotId && mongoose.Types.ObjectId.isValid(b.slotId.toString())
+          ? await Slot.findById(b.slotId).lean()
+          : null
         return {
           id: b._id.toString(),
           tokenNumber: b.tokenNumber,
           status: b.status,
-          date: new Date(b.date).toLocaleDateString(),
+          date: b.date ? new Date(b.date).toLocaleDateString() : 'N/A',
           timeSlot: slot?.timeSlot || '08:00 AM - 10:00 AM',
           centreName: centre?.name || 'Mandi Samiti',
-          quantity: 45
+          quantity: 42
         }
       })
     )
@@ -73,7 +79,7 @@ export default async function FarmerHistoryPage({ params }: { params: Promise<{ 
                     <tr key={h.id} className="hover:bg-slate-50">
                       <td className="p-3 font-bold text-slate-900">{h.tokenNumber}</td>
                       <td className="p-3 font-medium">{h.date} ({h.timeSlot})</td>
-                      <td className="p-3">{h.centreName}</td>
+                      <td className="p-3">{translateCentre(h.centreName, locale)}</td>
                       <td className="p-3">
                         <span className={`px-2 py-0.5 rounded-full font-bold text-[10px] ${
                           h.status === 'COMPLETED' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'

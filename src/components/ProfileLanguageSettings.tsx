@@ -7,7 +7,6 @@ import { usePathname } from "next/navigation"
 const LANGUAGES = [
   { code: "en", name: "English" },
   { code: "hi", name: "हिन्दी (Hindi)" },
-  { code: "bn", name: "বাংলা (Bengali)" },
   { code: "as", name: "অসমীয়া (Assamese)" },
   { code: "or", name: "ଓଡ଼ିଆ (Odia)" },
   { code: "mr", name: "मराठी (Marathi)" },

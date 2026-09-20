@@ -79,6 +79,17 @@ export async function markNotificationReadAction(notificationId: string) {
   revalidatePath('/farmer/dashboard')
 }
 
+export async function clearAllNotificationsAction() {
+  const session = await auth()
+  if (!session || !session.user) return
+
+  await connectToDatabase()
+  await Notification.deleteMany({ userId: session.user.id })
+
+  revalidatePath('/farmer/notifications')
+  revalidatePath('/farmer/dashboard')
+}
+
 export async function createBookingAction(centreId: string, slotId: string, crop: string, dateStr: string) {
   const session = await auth()
   if (!session || !session.user) {

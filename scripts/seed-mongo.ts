@@ -223,16 +223,32 @@ async function seed() {
   }
 
   // 6. Seed Sample Bookings & Procurements
+  // Booking 0 (Completed Procurement for Ramesh Singh)
+  const pastDate = new Date()
+  pastDate.setDate(pastDate.getDate() - 1)
+
+  const bookingPrev = await Booking.create({
+    farmerId: farmerProfiles[0]._id,
+    centreId: centreKarnal._id,
+    slotId: createdSlots[0]._id,
+    date: pastDate,
+    tokenNumber: 'TKN-7821',
+    queuePosition: 1,
+    status: 'COMPLETED'
+  })
+
+  // Booking 1 (Active Scheduled Booking for Ramesh Singh)
   const booking1 = await Booking.create({
     farmerId: farmerProfiles[0]._id,
     centreId: centreKarnal._id,
     slotId: createdSlots[1]._id,
     date: today,
     tokenNumber: 'TKN-8472',
-    queuePosition: 1,
-    status: 'ARRIVED'
+    queuePosition: 4,
+    status: 'SCHEDULED'
   })
 
+  // Booking 2 (Completed for Gurpreet Singh)
   const booking2 = await Booking.create({
     farmerId: farmerProfiles[1]._id,
     centreId: centreLudhiana._id,
@@ -244,6 +260,32 @@ async function seed() {
   })
 
   // 7. Procurements & Payments
+  // Procurement 1 for Ramesh Singh (42 Qtl Wheat @ 2275 = 95,550)
+  const procurement1 = await Procurement.create({
+    bookingId: bookingPrev._id,
+    workerId: workerProfiles[0]._id,
+    crop: 'Wheat (Sharbati)',
+    quantity: 42.0,
+    qualityGrade: 'Grade A',
+    moistureLevel: 11.2,
+    status: 'APPROVED',
+    paymentStatus: 'COMPLETED',
+    remarks: 'Grain quality tested. Moisture within limits.'
+  })
+
+  await Payment.create({
+    procurementId: procurement1._id,
+    farmerId: farmerProfiles[0]._id,
+    amount: 95550,
+    mspRatePerQuintal: 2275.0,
+    bankAccountMasked: 'XXXX-XXXX-4892',
+    ifscCode: 'SBIN0001245',
+    transactionId: 'TXN-9847102948',
+    status: 'SUCCESS',
+    paymentDate: pastDate
+  })
+
+  // Procurement 2 for Gurpreet Singh
   const procurement2 = await Procurement.create({
     bookingId: booking2._id,
     workerId: workerProfiles[1]._id,
@@ -263,7 +305,7 @@ async function seed() {
     mspRatePerQuintal: 2275.0,
     bankAccountMasked: 'XXXX-XXXX-4892',
     ifscCode: 'SBIN0001245',
-    transactionId: 'TXN-9847102948',
+    transactionId: 'TXN-9847102949',
     status: 'SUCCESS',
     paymentDate: new Date()
   })

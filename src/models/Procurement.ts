@@ -3,6 +3,7 @@ import mongoose, { Schema, Document, Model } from 'mongoose'
 export interface IProcurement extends Document {
   bookingId: mongoose.Types.ObjectId
   workerId: mongoose.Types.ObjectId
+  operationId?: string
   crop: string
   quantity: number
   qualityGrade: string
@@ -18,6 +19,7 @@ const ProcurementSchema = new Schema<IProcurement>(
   {
     bookingId: { type: Schema.Types.ObjectId, ref: 'Booking', required: true, unique: true, index: true },
     workerId: { type: Schema.Types.ObjectId, ref: 'WorkerProfile', required: true, index: true },
+    operationId: { type: String, sparse: true, unique: true, index: true },
     crop: { type: String, required: true },
     quantity: { type: Number, required: true },
     qualityGrade: { type: String, required: true },

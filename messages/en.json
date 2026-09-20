@@ -2,6 +2,9 @@
   "Common": {
     "appName": "Mandi Marg",
     "department": "Department of Agricultural Procurement",
+    "govIndia": "Government of India • Ministry of Agriculture",
+    "aiVoiceAssistant": "AI Voice Assistant",
+    "farmerAccount": "Farmer Account",
     "welcome": "Welcome to Mandi Marg",
     "login": "Login",
     "register": "Farmer Register",
@@ -268,5 +271,13 @@
     "back": "← Back",
     "goToDashboard": "Go to Dashboard",
     "trackLiveQueue": "Track Live Queue →"
+  },
+  "Notifications": {
+    "title": "Notification Center",
+    "subtitle": "Official alerts regarding your token, queue position, and DBT payments",
+    "clearAll": "Clear All 🗑️",
+    "logTitle": "Notifications Log",
+    "noNotifications": "No notifications received yet.",
+    "markRead": "Mark Read ✓"
   }
 }

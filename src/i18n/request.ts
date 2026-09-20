@@ -2,7 +2,6 @@ import { getRequestConfig } from 'next-intl/server';
 
 import en from '../../messages/en.json';
 import hi from '../../messages/hi.json';
-import bn from '../../messages/bn.json';
 import as from '../../messages/as.json';
 import or from '../../messages/or.json';
 import mr from '../../messages/mr.json';
@@ -25,7 +24,7 @@ import brx from '../../messages/brx.json';
 import mni from '../../messages/mni.json';
 
 const dictionaries: Record<string, any> = {
-  en, hi, bn, as, or, mr, gu, pa, ta, te, kn, ml, ur,
+  en, hi, as, or, mr, gu, pa, ta, te, kn, ml, ur,
   sa, mai, sat, ks, ne, kok, sd, doi, brx, mni
 };
 

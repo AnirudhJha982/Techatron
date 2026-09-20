@@ -214,10 +214,15 @@ export default function VoiceAssistant() {
           locale
         })
       })
-      
-      const confirmText = locale === 'hi'
-        ? `✅ आपकी बुकिंग सफलतापूर्वक हो गई है! आपका टोकन नंबर जनरेट हो गया है। विवरण डैशबोर्ड पर उपलब्ध हैं।`
-        : `✅ Your procurement slot has been booked successfully! Token pass generated. View details on your dashboard.`
+
+      const data = await res.json()
+      const confirmText = data.text || (
+        locale === 'hi'
+          ? `✅ आपकी बुकिंग सफलतापूर्वक हो गई है! आपका टोकन पास जनरेट हो गया है।`
+          : locale === 'bn'
+          ? `✅ আপনার বুকিং সফল হয়েছে! আপনার টোকেন পাস তৈরি করা হয়েছে।`
+          : `✅ Your procurement slot has been booked successfully! Token pass generated.`
+      )
 
       const confirmMsg: Message = {
         id: Date.now().toString(),
@@ -368,7 +373,7 @@ export default function VoiceAssistant() {
                   className="bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-300 hover:to-amber-400 text-green-950 font-black text-xs px-6 py-2 rounded-full flex items-center space-x-2 shadow-md"
                 >
                   <span>🎤</span>
-                  <span>{locale === 'hi' ? 'बोलने के लिए टैप करें' : 'Tap to Speak'}</span>
+                  <span>{locale === 'hi' ? 'बोलने के लिए टैप करें' : locale === 'bn' ? 'কথা বলতে ট্যাপ করুন' : 'Tap to Speak'}</span>
                 </Button>
               )}
             </div>
@@ -385,7 +390,7 @@ export default function VoiceAssistant() {
                 type="text"
                 value={inputQuery}
                 onChange={(e) => setInputQuery(e.target.value)}
-                placeholder={locale === 'hi' ? 'या अपना प्रश्न यहाँ लिखें...' : 'Or type your request...'}
+                placeholder={locale === 'hi' ? 'या अपना प्रश्न यहाँ लिखें...' : locale === 'bn' ? 'অথবা আপনার প্রশ্ন টাইপ করুন...' : 'Or type your request...'}
                 className="flex-grow bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-yellow-400"
               />
               <Button

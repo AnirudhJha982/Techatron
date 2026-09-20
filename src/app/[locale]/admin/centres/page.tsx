@@ -4,8 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { createCentreAction, updateCentreStatusAction } from "@/app/actions/adminActions"
+import { createCentreAction, updateCentreStatusAction, deleteCentreAction } from "@/app/actions/adminActions"
 import StateSelect from "@/components/ui/StateSelect"
+import AdminDeleteButton from "@/components/admin/AdminDeleteButton"
 
 export default async function AdminCentresPage() {
   await connectToDatabase()
@@ -93,7 +94,7 @@ export default async function AdminCentresPage() {
                     <th className="p-3">Daily Capacity</th>
                     <th className="p-3">Staff / Bookings</th>
                     <th className="p-3">Status</th>
-                    <th className="p-3 text-right">Toggle</th>
+                    <th className="p-3 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -111,14 +112,24 @@ export default async function AdminCentresPage() {
                         </span>
                       </td>
                       <td className="p-3 text-right">
-                        <form action={async () => {
-                          "use server"
-                          await updateCentreStatusAction(c.id, !c.isActive)
-                        }}>
-                          <Button size="sm" variant="outline" type="submit" className="text-[10px] font-bold h-6">
-                            {c.isActive ? 'Disable' : 'Enable'}
-                          </Button>
-                        </form>
+                        <div className="flex items-center justify-end gap-1.5">
+                          <form action={async () => {
+                            "use server"
+                            await updateCentreStatusAction(c.id, !c.isActive)
+                          }}>
+                            <Button size="sm" variant="outline" type="submit" className="text-[10px] font-bold h-6">
+                              {c.isActive ? 'Disable' : 'Enable'}
+                            </Button>
+                          </form>
+                          <AdminDeleteButton
+                            itemType="centre"
+                            itemName={c.name}
+                            onDelete={async () => {
+                              "use server"
+                              await deleteCentreAction(c.id)
+                            }}
+                          />
+                        </div>
                       </td>
                     </tr>
                   ))}

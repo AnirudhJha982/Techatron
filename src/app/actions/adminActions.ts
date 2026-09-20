@@ -182,3 +182,57 @@ export async function sendBroadcastNotificationAction(title: string, message: st
   revalidatePath('/farmer/notifications')
   return { success: true, count: users.length }
 }
+
+export async function deleteFarmerAction(userId: string) {
+  const session = await auth()
+  if (!session || session.user?.role !== 'ADMIN') {
+    throw new Error("Unauthorized Admin Action")
+  }
+
+  await connectToDatabase()
+  const user = await User.findById(userId)
+  if (!user) throw new Error("Farmer not found")
+
+  const farmerProfile = await FarmerProfile.findOne({ userId })
+  if (farmerProfile) {
+    const { Booking } = await import("@/models")
+    await Booking.deleteMany({ farmerId: farmerProfile._id })
+    await FarmerProfile.findByIdAndDelete(farmerProfile._id)
+  }
+
+  await User.findByIdAndDelete(userId)
+
+  await AuditLog.create({
+    userId: session.user.id,
+    action: "FARMER_DELETED",
+    details: `Farmer '${user.name}' (${user.phoneNumber || userId.slice(-6)}) permanently deleted by admin`
+  })
+
+  revalidatePath('/admin/farmers')
+  return { success: true }
+}
+
+export async function deleteCentreAction(centreId: string) {
+  const session = await auth()
+  if (!session || session.user?.role !== 'ADMIN') {
+    throw new Error("Unauthorized Admin Action")
+  }
+
+  await connectToDatabase()
+  const centre = await ProcurementCentre.findById(centreId)
+  if (!centre) throw new Error("Procurement centre not found")
+
+  await Slot.deleteMany({ centreId: centre._id })
+  await ProcurementCentre.findByIdAndDelete(centreId)
+
+  await AuditLog.create({
+    userId: session.user.id,
+    action: "CENTRE_DELETED",
+    details: `Procurement Centre '${centre.name}' in ${centre.district}, ${centre.state} deleted by admin`
+  })
+
+  revalidatePath('/admin/centres')
+  revalidatePath('/centres')
+  return { success: true }
+}
+

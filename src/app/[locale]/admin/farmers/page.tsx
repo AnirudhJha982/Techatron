@@ -2,7 +2,8 @@ import { connectToDatabase } from "@/lib/mongodb"
 import { User, FarmerProfile, Booking } from "@/models"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { toggleUserStatusAction } from "@/app/actions/adminActions"
+import { toggleUserStatusAction, deleteFarmerAction } from "@/app/actions/adminActions"
+import AdminDeleteButton from "@/components/admin/AdminDeleteButton"
 
 export default async function AdminFarmersPage({ searchParams }: { searchParams: Promise<{ query?: string }> }) {
   const { query } = await searchParams
@@ -92,7 +93,7 @@ export default async function AdminFarmersPage({ searchParams }: { searchParams:
                   <th className="p-3">KYC</th>
                   <th className="p-3">Bookings</th>
                   <th className="p-3">Status</th>
-                  <th className="p-3 text-center">Toggle</th>
+                  <th className="p-3 text-center">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -122,23 +123,33 @@ export default async function AdminFarmersPage({ searchParams }: { searchParams:
                       </span>
                     </td>
                     <td className="p-3 text-center">
-                      <form action={async () => {
-                        "use server"
-                        await toggleUserStatusAction(f.id, !f.isActive)
-                      }}>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          type="submit"
-                          className={`text-[10px] font-bold h-6 ${
-                            f.isActive
-                              ? 'border-red-300 text-red-700 hover:bg-red-50'
-                              : 'border-green-300 text-green-700 hover:bg-green-50'
-                          }`}
-                        >
-                          {f.isActive ? 'Deactivate' : 'Activate'}
-                        </Button>
-                      </form>
+                      <div className="flex items-center justify-center gap-1.5">
+                        <form action={async () => {
+                          "use server"
+                          await toggleUserStatusAction(f.id, !f.isActive)
+                        }}>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            type="submit"
+                            className={`text-[10px] font-bold h-6 ${
+                              f.isActive
+                                ? 'border-amber-300 text-amber-700 hover:bg-amber-50'
+                                : 'border-green-300 text-green-700 hover:bg-green-50'
+                            }`}
+                          >
+                            {f.isActive ? 'Deactivate' : 'Activate'}
+                          </Button>
+                        </form>
+                        <AdminDeleteButton
+                          itemType="farmer"
+                          itemName={f.name}
+                          onDelete={async () => {
+                            "use server"
+                            await deleteFarmerAction(f.id)
+                          }}
+                        />
+                      </div>
                     </td>
                   </tr>
                 ))}

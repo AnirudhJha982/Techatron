@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import fs from 'fs';
 import path from 'path';

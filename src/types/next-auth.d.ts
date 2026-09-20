@@ -8,6 +8,7 @@ declare module "next-auth" {
       language: string
       isManualLanguage?: boolean
       preferredLanguage?: string
+      centreId?: string
     } & DefaultSession["user"]
   }
 
@@ -17,5 +18,6 @@ declare module "next-auth" {
     language: string
     isManualLanguage?: boolean
     preferredLanguage?: string
+    centreId?: string
   }
 }

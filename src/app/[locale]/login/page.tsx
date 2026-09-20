@@ -39,13 +39,13 @@ export default function LoginPage() {
           <CardContent>
             <form action={dispatch} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="phoneNumber">Mobile Number</Label>
+                <Label htmlFor="loginId">Mobile Number / Worker ID</Label>
                 <Input
-                  id="phoneNumber"
-                  name="phoneNumber"
+                  id="loginId"
+                  name="loginId"
                   type="text"
                   required
-                  placeholder="Enter 10-digit mobile number"
+                  placeholder="Enter mobile number or worker ID"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   className="focus-visible:ring-green-600"

@@ -82,7 +82,16 @@
     "status": "Status",
     "queueProgress": "Queue Progress",
     "inQueue": "in queue",
-    "queueNotice": "Gate 2 Queue moving smoothly. Please keep your crop documents ready."
+    "queueNotice": "Gate 2 Queue moving smoothly. Please keep your crop documents ready.",
+    "harvest": "Harvest",
+    "dbtCredit": "DBT Credit",
+    "wheatPaddyMsp": "Wheat & Paddy MSP",
+    "dbtFull": "Direct Benefit Transfer (DBT)",
+    "gate2Entry": "Gate 2 Entry",
+    "live": "Live",
+    "realTime": "Real-time",
+    "estWaitTime": "Est. wait: ~25 min",
+    "qtl": "Qtl"
   },
   "Queue": {
     "title": "Live Queue Status",
@@ -100,7 +109,10 @@
     "smsActiveBtn": "✓ SMS Alerts Active",
     "noActiveQueueTitle": "No Active Queue Booking",
     "noActiveQueueSub": "Book a procurement slot to track live Mandi token movement.",
-    "bookSlotBtn": "Book Procurement Slot"
+    "bookSlotBtn": "Book Procurement Slot",
+    "nowServing": "Now Serving",
+    "peopleAhead": "People Ahead",
+    "estWaitShort": "Est. Wait"
   },
   "Token": {
     "title": "Digital Token Pass",

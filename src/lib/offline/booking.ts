@@ -5,20 +5,28 @@ import { enqueueSyncOperation } from '../sync/syncQueue';
 export async function getCentresOffline() {
   if (typeof window !== 'undefined' && navigator.onLine) {
     const centres = await getCentres();
-    const db = await getDB();
-    if (db) {
-      const tx = db.transaction('centres', 'readwrite');
-      for (const c of centres) {
-        tx.store.put(c);
+    try {
+      const db = await getDB();
+      if (db) {
+        const tx = db.transaction('centres', 'readwrite');
+        for (const c of centres) {
+          tx.store.put({ ...c, _id: c.id });
+        }
       }
+    } catch (e) {
+      console.error("Failed to cache centres offline:", e);
     }
     return centres;
   }
 
   // Offline fallback
-  const db = await getDB();
-  if (db) {
-    return await db.getAll('centres');
+  try {
+    const db = await getDB();
+    if (db) {
+      return await db.getAll('centres');
+    }
+  } catch (e) {
+    console.error("Failed to read centres from offline DB:", e);
   }
   return [];
 }
@@ -26,24 +34,29 @@ export async function getCentresOffline() {
 export async function getSlotsOffline(centreId: string, dateStr: string) {
   if (typeof window !== 'undefined' && navigator.onLine) {
     const slots = await getSlots(centreId, dateStr);
-    const db = await getDB();
-    if (db) {
-      const tx = db.transaction('slots', 'readwrite');
-      for (const s of slots) {
-        tx.store.put(s);
+    try {
+      const db = await getDB();
+      if (db) {
+        const tx = db.transaction('slots', 'readwrite');
+        for (const s of slots) {
+          tx.store.put({ ...s, _id: s.id, centreId, dateStr });
+        }
       }
+    } catch (e) {
+      console.error("Failed to cache slots offline:", e);
     }
     return slots;
   }
 
   // Offline fallback
-  const db = await getDB();
-  if (db) {
-    // Basic filter
-    const allSlots = await db.getAll('slots');
-    // Note: the original slots don't have centreId in the returned mapped object!
-    // But since it's just a fallback, we return all or do best effort
-    return allSlots;
+  try {
+    const db = await getDB();
+    if (db) {
+      const allSlots = await db.getAll('slots');
+      return allSlots.filter(s => s.centreId === centreId && s.dateStr === dateStr);
+    }
+  } catch (e) {
+    console.error("Failed to read slots from offline DB:", e);
   }
   return [];
 }

@@ -153,7 +153,7 @@ export default async function FarmerDashboard({ params }: { params: Promise<{ lo
             <CardTitle className="text-[11px] font-black uppercase text-slate-500 tracking-wider">
               {tFarmer('activeToken')}
             </CardTitle>
-            <span className="text-xs font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded">Live</span>
+            {activeBookingData && <span className="text-xs font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded">Live</span>}
           </CardHeader>
           <CardContent className="flex items-center justify-between">
             <div>
@@ -165,7 +165,9 @@ export default async function FarmerDashboard({ params }: { params: Promise<{ lo
               </p>
               {activeBookingData && <p className="text-[11px] text-slate-500">{activeBookingData.timeSlot}</p>}
             </div>
-            <TokenPassIllustration />
+            <div className={activeBookingData ? "" : "opacity-30 grayscale"}>
+              <TokenPassIllustration />
+            </div>
           </CardContent>
         </Card>
 
@@ -175,15 +177,15 @@ export default async function FarmerDashboard({ params }: { params: Promise<{ lo
             <CardTitle className="text-[11px] font-black uppercase text-slate-500 tracking-wider">
               {tFarmer('totalSold')}
             </CardTitle>
-            <span className="text-xs font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded">Harvest</span>
+            <span className="text-xs font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded">{tFarmer('harvest')}</span>
           </CardHeader>
           <CardContent className="flex items-center justify-between">
             <div>
               <p className="text-3xl font-black text-[#0c3823]">
-                {totalQuantity.toFixed(1)} <span className="text-sm font-bold text-amber-700">Qtl</span>
+                {totalQuantity.toFixed(1)} <span className="text-sm font-bold text-amber-700">{tFarmer('qtl')}</span>
               </p>
               <p className="text-xs text-slate-600 mt-1 font-medium">{tFarmer('accumulatedMspSales')}</p>
-              <p className="text-[11px] text-slate-500">Wheat & Paddy MSP</p>
+              <p className="text-[11px] text-slate-500">{tFarmer('wheatPaddyMsp')}</p>
             </div>
             <GrainSackIllustration />
           </CardContent>
@@ -195,7 +197,7 @@ export default async function FarmerDashboard({ params }: { params: Promise<{ lo
             <CardTitle className="text-[11px] font-black uppercase text-slate-500 tracking-wider">
               {tFarmer('totalReceived')}
             </CardTitle>
-            <span className="text-xs font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded">DBT Credit</span>
+            <span className="text-xs font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded">{tFarmer('dbtCredit')}</span>
           </CardHeader>
           <CardContent className="flex items-center justify-between">
             <div>
@@ -203,7 +205,7 @@ export default async function FarmerDashboard({ params }: { params: Promise<{ lo
                 ₹ {totalReceived.toLocaleString('en-IN')}
               </p>
               <p className="text-xs text-slate-600 mt-1 font-medium">{tFarmer('creditedViaDbt')}</p>
-              <p className="text-[11px] text-emerald-700 font-bold">Direct Benefit Transfer (DBT)</p>
+              <p className="text-[11px] text-emerald-700 font-bold">{tFarmer('dbtFull')}</p>
             </div>
             <DBTPaymentIllustration />
           </CardContent>
@@ -215,7 +217,7 @@ export default async function FarmerDashboard({ params }: { params: Promise<{ lo
             <CardTitle className="text-[11px] font-black uppercase text-slate-500 tracking-wider">
               {tFarmer('queuePos')}
             </CardTitle>
-            <span className="text-xs font-bold text-purple-800 bg-purple-50 px-2 py-0.5 rounded">Real-time</span>
+            {activeBookingData && <span className="text-xs font-bold text-purple-800 bg-purple-50 px-2 py-0.5 rounded">{tFarmer('realTime')}</span>}
           </CardHeader>
           <CardContent className="flex items-center justify-between">
             <div>
@@ -223,11 +225,13 @@ export default async function FarmerDashboard({ params }: { params: Promise<{ lo
                 {activeBookingData ? `#${activeBookingData.queuePosition}` : tFarmer('none')}
               </p>
               <p className="text-xs text-slate-600 mt-1 font-medium">
-                {activeBookingData ? "Est. wait: ~25 min" : tFarmer('noQueueActive')}
+                {activeBookingData ? tFarmer('estWaitTime') : tFarmer('noQueueActive')}
               </p>
-              <p className="text-[11px] text-purple-700 font-bold">Gate 2 Entry</p>
+              {activeBookingData && <p className="text-[11px] text-purple-700 font-bold">{tFarmer('gate2Entry')}</p>}
             </div>
-            <QueuePathIllustration />
+            <div className={activeBookingData ? "" : "opacity-30 grayscale"}>
+              <QueuePathIllustration />
+            </div>
           </CardContent>
         </Card>
       </div>

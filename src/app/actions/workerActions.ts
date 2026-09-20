@@ -5,11 +5,11 @@ import { Booking, Procurement, Payment, WorkerProfile, FarmerProfile, User, Noti
 import { auth } from "@/auth"
 import { revalidatePath } from "next/cache"
 
-export async function updateQueueStatusAction(bookingId: string, status: string) {
+export async function updateQueueStatusAction(bookingId: string, status: "PROCESSING" | "COMPLETED" | "SCHEDULED" | "ARRIVED" | "CANCELLED") {
   return updateBookingStatusAction(bookingId, status)
 }
 
-export async function updateBookingStatusAction(bookingId: string, status: string) {
+export async function updateBookingStatusAction(bookingId: string, status: "PROCESSING" | "COMPLETED" | "SCHEDULED" | "ARRIVED" | "CANCELLED") {
   const session = await auth()
   if (!session || !session.user || (session.user.role !== 'WORKER' && session.user.role !== 'ADMIN')) {
     throw new Error("Unauthorized")
@@ -17,10 +17,19 @@ export async function updateBookingStatusAction(bookingId: string, status: strin
 
   await connectToDatabase()
 
-  const booking = await Booking.findByIdAndUpdate(bookingId, { status }, { new: true })
+  const booking = await Booking.findById(bookingId)
   if (!booking) {
     throw new Error("Booking not found")
   }
+
+  if (session.user.role === 'WORKER') {
+    if (booking.centreId.toString() !== session.user.centreId) {
+      throw new Error("Unauthorized. You can only manage bookings for your assigned Mandi.")
+    }
+  }
+
+  booking.status = status
+  await booking.save()
 
   const farmerProfile = await FarmerProfile.findById(booking.farmerId)
   if (farmerProfile) {
@@ -88,6 +97,17 @@ export async function processProcurementAction(data: {
 
   await connectToDatabase()
 
+  const booking = await Booking.findById(data.bookingId)
+  if (!booking) {
+    throw new Error("Booking not found")
+  }
+
+  if (session.user.role === 'WORKER') {
+    if (booking.centreId.toString() !== session.user.centreId) {
+      throw new Error("Unauthorized. You can only manage procurements for your assigned Mandi.")
+    }
+  }
+
   let workerProfile = await WorkerProfile.findOne({ userId: session.user.id })
   if (!workerProfile) {
     // Fallback if super admin processes
@@ -120,10 +140,8 @@ export async function processProcurementAction(data: {
   }
 
   // Update booking status to COMPLETED
-  const booking = await Booking.findByIdAndUpdate(data.bookingId, { status: "COMPLETED" }, { new: true })
-  if (!booking) {
-    throw new Error("Booking not found")
-  }
+  booking.status = "COMPLETED"
+  await booking.save()
 
   const farmerProfile = await FarmerProfile.findById(booking.farmerId)
   const farmerUser = farmerProfile ? await User.findById(farmerProfile.userId) : null

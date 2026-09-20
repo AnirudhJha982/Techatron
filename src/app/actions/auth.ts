@@ -11,19 +11,25 @@ export async function authenticate(
   formData: FormData,
 ) {
   try {
-    const rawPhone = formData.get("phoneNumber") as string
+    const rawLoginId = formData.get("loginId") as string || formData.get("phoneNumber") as string
     const password = formData.get("password") as string
-    const phoneNumber = rawPhone ? rawPhone.trim() : ""
+    const loginId = rawLoginId ? rawLoginId.trim() : ""
 
-    if (!phoneNumber || !password) {
-      return 'Please enter phone number and password.'
+    if (!loginId || !password) {
+      return 'Please enter your login ID and password.'
     }
 
     await connectToDatabase()
-    const user = await User.findOne({ phoneNumber })
+    const user = await User.findOne({ 
+      $or: [{ phoneNumber: loginId }, { username: loginId }]
+    })
 
     if (!user) {
-      return 'Invalid credentials. User phone number not registered.'
+      return 'Invalid credentials. User not registered.'
+    }
+    
+    if (user.role === 'WORKER' && user.isActive === false) {
+      return 'Worker account is deactivated. Please contact admin.'
     }
 
     const passwordsMatch = await bcrypt.compare(password, user.passwordHash)
@@ -42,7 +48,7 @@ export async function authenticate(
     const targetDashboard = `/${effectiveLang}/${role}/dashboard`
 
     await signIn('credentials', {
-      phoneNumber,
+      loginId,
       password,
       redirectTo: targetDashboard
     })

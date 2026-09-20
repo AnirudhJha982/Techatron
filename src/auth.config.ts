@@ -14,6 +14,7 @@ export const authConfig = {
         token.language = user.language
         token.isManualLanguage = user.isManualLanguage
         token.preferredLanguage = user.preferredLanguage
+        if ('centreId' in user) token.centreId = user.centreId
       }
       return token
     },
@@ -24,6 +25,7 @@ export const authConfig = {
         session.user.isManualLanguage = token.isManualLanguage as boolean | undefined
         session.user.preferredLanguage = token.preferredLanguage as string | undefined
         session.user.id = token.sub as string
+        if (token.centreId) session.user.centreId = token.centreId as string
       }
       return session
     }

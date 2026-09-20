@@ -98,7 +98,7 @@ export default async function FarmerLayout({
             <span className="text-lg">🎙️</span>
             <span>{tCommon('aiVoiceAssistant')}</span>
           </div>
-          <p className="text-[10px] text-emerald-200 leading-snug">Ask anything in your spoken regional language</p>
+          <p className="text-[10px] text-emerald-200 leading-snug">{tCommon('aiVoiceSub')}</p>
         </div>
       </aside>
 

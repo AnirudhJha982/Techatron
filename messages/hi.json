@@ -18,7 +18,12 @@
     "language": "भाषा",
     "demoNotice": "सरकारी मॉडल पोर्टल",
     "demoSub": "कृषि एवं किसान कल्याण विभाग, भारत सरकार",
-    "tollFree": "टोल-फ्री किसान हेल्पलाइन"
+    "tollFree": "टोल-फ्री किसान हेल्पलाइन",
+    "aiVoiceSub": "अपनी बोली जाने वाली क्षेत्रीय भाषा में कुछ भी पूछें",
+    "online": "ऑनलाइन",
+    "offline": "ऑफ़लाइन",
+    "syncing": "सिंक हो रहा है...",
+    "movingAssistant": "गतिशील सहायक..."
   },
   "Landing": {
     "heroTitle": "पारदर्शी, सरल और सुलभ कृषि खरीद",
@@ -91,7 +96,26 @@
     "live": "लाइव",
     "realTime": "रीयल-टाइम",
     "estWaitTime": "अनुमानित प्रतीक्षा: ~25 मिनट",
-    "qtl": "क्विंटल"
+    "qtl": "क्विंटल",
+    "basicAccount": "मूल खाता",
+    "farmerIdLabel": "किसान आईडी",
+    "cropLabel": "फसल",
+    "mandiLabel": "मंडी",
+    "dateLabel": "दिनांक",
+    "timeSlotLabel": "टाइम स्लॉट",
+    "statusLabel": "स्थिति",
+    "workflowTimeline": "खरीद वर्कफ़्लो समयरेखा",
+    "stepBooked": "1. बुक किया गया ✓",
+    "stepArrived": "2. आ गया ✓",
+    "stepInQueue": "3. कतार में",
+    "stepQuality": "4. गुणवत्ता",
+    "stepWeighing": "5. तौलना",
+    "stepComplete": "6. पूर्ण",
+    "recentProcurementsTitle": "हाल की खरीद और डीबीटी भुगतान",
+    "recentProcurementsSub": "प्रत्यक्ष लाभ अंतरण क्रेडिट लॉग",
+    "quantity": "मात्रा",
+    "mspRateHeader": "एमएसपी (₹/क्विंटल)",
+    "amountHeader": "राशि (₹)"
   },
   "Queue": {
     "title": "लाइव कतार स्थिति",
@@ -112,7 +136,10 @@
     "bookSlotBtn": "खरीद स्लॉट बुक करें",
     "nowServing": "अभी सेवा में",
     "peopleAhead": "आगे के लोग",
-    "estWaitShort": "अनुमानित प्रतीक्षा"
+    "estWaitShort": "अनुमानित प्रतीक्षा",
+    "realtimeSequence": "वास्तविक समय टोकन अनुक्रम",
+    "viewFullQueue": "पूरी कतार देखें →",
+    "you": "आप"
   },
   "Token": {
     "title": "डिजिटल टोकन पास",
@@ -145,7 +172,11 @@
     "totalAmount": "कुल राशि",
     "paymentStatus": "भुगतान स्थिति",
     "pfmsRef": "PFMS संदर्भ संख्या",
-    "noPaymentRecords": "अभी कोई भुगतान रिकॉर्ड उपलब्ध नहीं हैं।"
+    "noPaymentRecords": "अभी कोई भुगतान रिकॉर्ड उपलब्ध नहीं हैं।",
+    "dbtSubtitle": "प्रत्यक्ष लाभ अंतरण (डीबीटी)",
+    "credited": "श्रेय दिया गया",
+    "aadhaarBankAccount": "आधार बैंक खाता",
+    "transactionReference": "लेन-देन संदर्भ"
   },
   "Procurement": {
     "title": "खरीद स्थिति और गुणवत्ता रिपोर्ट",

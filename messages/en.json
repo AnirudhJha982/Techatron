@@ -4,7 +4,12 @@
     "department": "Department of Agricultural Procurement",
     "govIndia": "Government of India • Ministry of Agriculture",
     "aiVoiceAssistant": "AI Voice Assistant",
+    "aiVoiceSub": "Ask anything in your spoken regional language",
     "farmerAccount": "Farmer Account",
+    "online": "Online",
+    "offline": "Offline",
+    "syncing": "Syncing...",
+    "movingAssistant": "Moving Assistant...",
     "welcome": "Welcome to Mandi Marg",
     "login": "Login",
     "register": "Farmer Register",
@@ -91,7 +96,26 @@
     "live": "Live",
     "realTime": "Real-time",
     "estWaitTime": "Est. wait: ~25 min",
-    "qtl": "Qtl"
+    "qtl": "Qtl",
+    "basicAccount": "Basic Account",
+    "farmerIdLabel": "Farmer ID",
+    "cropLabel": "Crop",
+    "mandiLabel": "Mandi",
+    "dateLabel": "Date",
+    "timeSlotLabel": "Time Slot",
+    "statusLabel": "Status",
+    "workflowTimeline": "Procurement Workflow Timeline",
+    "stepBooked": "1. Booked ✓",
+    "stepArrived": "2. Arrived ✓",
+    "stepInQueue": "3. In Queue",
+    "stepQuality": "4. Quality",
+    "stepWeighing": "5. Weighing",
+    "stepComplete": "6. Complete",
+    "recentProcurementsTitle": "Recent Procurement & DBT Payments",
+    "recentProcurementsSub": "Direct Benefit Transfer credit logs",
+    "quantity": "Quantity",
+    "mspRateHeader": "MSP (₹/Qtl)",
+    "amountHeader": "Amount (₹)"
   },
   "Queue": {
     "title": "Live Queue Status",
@@ -112,7 +136,10 @@
     "bookSlotBtn": "Book Procurement Slot",
     "nowServing": "Now Serving",
     "peopleAhead": "People Ahead",
-    "estWaitShort": "Est. Wait"
+    "estWaitShort": "Est. Wait",
+    "realtimeSequence": "Real-time token sequence",
+    "viewFullQueue": "View Full Queue →",
+    "you": "YOU"
   },
   "Token": {
     "title": "Digital Token Pass",
@@ -145,7 +172,11 @@
     "totalAmount": "Total Amount",
     "paymentStatus": "Payment Status",
     "pfmsRef": "PFMS Ref Number",
-    "noPaymentRecords": "No payment records available yet."
+    "noPaymentRecords": "No payment records available yet.",
+    "dbtSubtitle": "Direct Benefit Transfer (DBT)",
+    "credited": "Credited",
+    "aadhaarBankAccount": "Aadhaar Bank Account",
+    "transactionReference": "Transaction Reference"
   },
   "Procurement": {
     "title": "Procurement Status & Quality Reports",

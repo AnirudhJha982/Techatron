@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { usePathname } from 'next/navigation'
 import { Button } from '@/components/ui/button'
+import { useTranslations } from 'next-intl'
 
 interface Message {
   id: string
@@ -21,6 +22,7 @@ interface Message {
 export default function VoiceAssistant() {
   const pathname = usePathname()
   const locale = pathname ? pathname.split('/')[1] || 'en' : 'en'
+  const tCommon = useTranslations('Common')
 
   const [isOpen, setIsOpen] = useState(false)
   const [messages, setMessages] = useState<Message[]>([
@@ -436,11 +438,7 @@ export default function VoiceAssistant() {
             <span className="text-xs tracking-tight uppercase select-none">
               {isDragging
                 ? 'Moving Assistant...'
-                : locale === 'hi'
-                ? 'AI सहायता सह-पायलट'
-                : locale === 'bn'
-                ? 'AI ভয়েস সহকারী'
-                : 'AI Voice Assistant'}
+                : tCommon('aiVoiceAssistant')}
             </span>
             <span
               className={`w-2.5 h-2.5 rounded-full ${

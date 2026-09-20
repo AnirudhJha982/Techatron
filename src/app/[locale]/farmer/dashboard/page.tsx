@@ -134,11 +134,11 @@ export default async function FarmerDashboard({ params }: { params: Promise<{ lo
             ) : (
               <span className="text-[11px] font-black bg-amber-600 text-white px-3 py-1 rounded-full uppercase tracking-wider shadow-sm flex items-center space-x-1">
                 <span>🔴</span>
-                <span>BASIC ACCOUNT</span>
+                <span>{tFarmer('basicAccount')}</span>
               </span>
             )}
             <span className="text-xs text-amber-900 font-bold bg-amber-100 px-2.5 py-0.5 rounded-full border border-amber-300">
-              Farmer ID: {farmerProfile?.farmerId || 'KF-847291'}
+              {tFarmer('farmerIdLabel')}: {farmerProfile?.farmerId || 'KF-847291'}
             </span>
           </div>
 
@@ -279,19 +279,19 @@ export default async function FarmerDashboard({ params }: { params: Promise<{ lo
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-[#faf8f2] p-5 rounded-2xl border border-[#e2decb]">
                   <div className="space-y-2 text-xs">
                     <div className="flex justify-between border-b border-slate-200 pb-1.5">
-                      <span className="text-slate-500 font-medium">Crop:</span>
+                      <span className="text-slate-500 font-medium">{tFarmer('cropLabel')}:</span>
                       <strong className="text-slate-900 font-bold">Wheat (Sharbati)</strong>
                     </div>
                     <div className="flex justify-between border-b border-slate-200 pb-1.5">
-                      <span className="text-slate-500 font-medium">Mandi:</span>
+                      <span className="text-slate-500 font-medium">{tFarmer('mandiLabel')}:</span>
                       <strong className="text-slate-900 font-bold">{translateCentre(activeBookingData.centreName, locale)}</strong>
                     </div>
                     <div className="flex justify-between border-b border-slate-200 pb-1.5">
-                      <span className="text-slate-500 font-medium">Date:</span>
+                      <span className="text-slate-500 font-medium">{tFarmer('dateLabel')}:</span>
                       <strong className="text-slate-900 font-bold">{new Date(activeBookingData.date).toLocaleDateString()}</strong>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-500 font-medium">Time Slot:</span>
+                      <span className="text-slate-500 font-medium">{tFarmer('timeSlotLabel')}:</span>
                       <strong className="text-slate-900 font-bold">{activeBookingData.timeSlot}</strong>
                     </div>
                   </div>
@@ -301,7 +301,7 @@ export default async function FarmerDashboard({ params }: { params: Promise<{ lo
                     <p className="text-3xl font-black text-[#0c3823] my-1">{activeBookingData.tokenNumber}</p>
                     <span className="inline-flex items-center space-x-1 text-xs font-bold bg-green-100 text-green-900 px-3 py-1 rounded-full">
                       <span>🟢</span>
-                      <span>STATUS: {activeBookingData.status}</span>
+                      <span>{tFarmer('statusLabel')}: {activeBookingData.status}</span>
                     </span>
                   </div>
                 </div>
@@ -319,14 +319,14 @@ export default async function FarmerDashboard({ params }: { params: Promise<{ lo
 
               {/* Booking Progress Timeline */}
               <div className="mt-6 pt-4 border-t border-slate-100">
-                <p className="text-xs font-black text-slate-700 uppercase tracking-wider mb-3">Procurement Workflow Timeline</p>
+                <p className="text-xs font-black text-slate-700 uppercase tracking-wider mb-3">{tFarmer('workflowTimeline')}</p>
                 <div className="grid grid-cols-6 gap-1 text-center text-[10px] font-bold">
-                  <div className="bg-emerald-100 text-emerald-950 p-2 rounded-lg border border-emerald-300">1. Booked ✓</div>
-                  <div className="bg-emerald-100 text-emerald-950 p-2 rounded-lg border border-emerald-300">2. Arrived ✓</div>
-                  <div className="bg-yellow-400 text-emerald-950 p-2 rounded-lg border border-yellow-500 font-black animate-pulse">3. In Queue</div>
-                  <div className="bg-slate-100 text-slate-400 p-2 rounded-lg border border-slate-200">4. Quality</div>
-                  <div className="bg-slate-100 text-slate-400 p-2 rounded-lg border border-slate-200">5. Weighing</div>
-                  <div className="bg-slate-100 text-slate-400 p-2 rounded-lg border border-slate-200">6. Complete</div>
+                  <div className="bg-emerald-100 text-emerald-950 p-2 rounded-lg border border-emerald-300">{tFarmer('stepBooked')}</div>
+                  <div className="bg-emerald-100 text-emerald-950 p-2 rounded-lg border border-emerald-300">{tFarmer('stepArrived')}</div>
+                  <div className="bg-yellow-400 text-emerald-950 p-2 rounded-lg border border-yellow-500 font-black animate-pulse">{tFarmer('stepInQueue')}</div>
+                  <div className="bg-slate-100 text-slate-400 p-2 rounded-lg border border-slate-200">{tFarmer('stepQuality')}</div>
+                  <div className="bg-slate-100 text-slate-400 p-2 rounded-lg border border-slate-200">{tFarmer('stepWeighing')}</div>
+                  <div className="bg-slate-100 text-slate-400 p-2 rounded-lg border border-slate-200">{tFarmer('stepComplete')}</div>
                 </div>
               </div>
             </CardContent>
@@ -336,8 +336,8 @@ export default async function FarmerDashboard({ params }: { params: Promise<{ lo
           <Card className="bg-white border border-[#e2decb] rounded-2xl shadow-sm overflow-hidden">
             <CardHeader className="bg-[#faf8f2] border-b border-[#e2decb] p-5 flex flex-row items-center justify-between">
               <div>
-                <CardTitle className="text-lg font-black text-[#0c3823]">Recent Procurement & DBT Payments</CardTitle>
-                <CardDescription className="text-xs text-slate-500">Direct Benefit Transfer credit logs</CardDescription>
+                <CardTitle className="text-lg font-black text-[#0c3823]">{tFarmer('recentProcurementsTitle')}</CardTitle>
+                <CardDescription className="text-xs text-slate-500">{tFarmer('recentProcurementsSub')}</CardDescription>
               </div>
               <Link href={`/${locale}/farmer/history`}>
                 <Button size="sm" variant="ghost" className="text-xs font-bold text-[#0c3823] hover:underline">
@@ -354,10 +354,10 @@ export default async function FarmerDashboard({ params }: { params: Promise<{ lo
                   <thead className="bg-[#f4f1e8] text-slate-700 uppercase font-black border-b border-[#e2decb]">
                     <tr>
                       <th className="p-3.5">{tFarmer('date')}</th>
-                      <th className="p-3.5">Crop</th>
-                      <th className="p-3.5">Quantity</th>
-                      <th className="p-3.5">MSP (₹/Qtl)</th>
-                      <th className="p-3.5">Amount (₹)</th>
+                      <th className="p-3.5">{tFarmer('cropLabel')}</th>
+                      <th className="p-3.5">{tFarmer('quantity')}</th>
+                      <th className="p-3.5">{tFarmer('mspRateHeader')}</th>
+                      <th className="p-3.5">{tFarmer('amountHeader')}</th>
                       <th className="p-3.5">{tFarmer('status')}</th>
                     </tr>
                   </thead>
@@ -394,10 +394,10 @@ export default async function FarmerDashboard({ params }: { params: Promise<{ lo
             <CardHeader className="bg-[#faf8f2] border-b border-[#e2decb] p-5 flex flex-row items-center justify-between">
               <div>
                 <CardTitle className="text-base font-black text-[#0c3823]">{tQueue('title')}</CardTitle>
-                <CardDescription className="text-xs text-slate-500">Real-time token sequence</CardDescription>
+                <CardDescription className="text-xs text-slate-500">{tQueue('realtimeSequence')}</CardDescription>
               </div>
               <Link href={`/${locale}/farmer/queue`}>
-                <span className="text-xs font-bold text-emerald-800 hover:underline">View Full Queue →</span>
+                <span className="text-xs font-bold text-emerald-800 hover:underline">{tQueue('viewFullQueue')}</span>
               </Link>
             </CardHeader>
             <CardContent className="p-5 space-y-5">
@@ -405,7 +405,7 @@ export default async function FarmerDashboard({ params }: { params: Promise<{ lo
                 <>
                   <div className="grid grid-cols-4 gap-2 text-center text-xs">
                     <div className="bg-slate-100 p-2.5 rounded-xl border border-slate-200">
-                      <span className="text-[10px] text-slate-500 font-bold block uppercase">Now Serving</span>
+                      <span className="text-[10px] text-slate-500 font-bold block uppercase">{tQueue('nowServing')}</span>
                       <strong className="text-base font-black text-slate-900 block mt-0.5">T-001</strong>
                     </div>
                     <div className="bg-amber-100 p-2.5 rounded-xl border border-amber-300">
@@ -415,13 +415,13 @@ export default async function FarmerDashboard({ params }: { params: Promise<{ lo
                       </strong>
                     </div>
                     <div className="bg-slate-100 p-2.5 rounded-xl border border-slate-200">
-                      <span className="text-[10px] text-slate-500 font-bold block uppercase">People Ahead</span>
+                      <span className="text-[10px] text-slate-500 font-bold block uppercase">{tQueue('peopleAhead')}</span>
                       <strong className="text-base font-black text-slate-900 block mt-0.5">
                         {Math.max(0, activeBookingData.queuePosition - 1)}
                       </strong>
                     </div>
                     <div className="bg-purple-50 p-2.5 rounded-xl border border-purple-200">
-                      <span className="text-[10px] text-purple-900 font-bold block uppercase">Est. Wait</span>
+                      <span className="text-[10px] text-purple-900 font-bold block uppercase">{tQueue('estWaitShort')}</span>
                       <strong className="text-base font-black text-purple-950 block mt-0.5">25 min</strong>
                     </div>
                   </div>
@@ -433,7 +433,7 @@ export default async function FarmerDashboard({ params }: { params: Promise<{ lo
                       <span className="w-7 h-7 rounded-full bg-emerald-800 text-white flex items-center justify-center font-black">2</span>
                       <span className="w-7 h-7 rounded-full bg-emerald-800 text-white flex items-center justify-center font-black">3</span>
                       <span className="w-8 h-8 rounded-full bg-yellow-400 text-[#0c3823] flex items-center justify-center font-black ring-4 ring-yellow-200 scale-110 shadow-md">
-                        {activeBookingData.queuePosition} YOU
+                        {activeBookingData.queuePosition} {tQueue('you')}
                       </span>
                       <span className="w-7 h-7 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center">5</span>
                       <span className="w-7 h-7 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center">6</span>
@@ -460,7 +460,7 @@ export default async function FarmerDashboard({ params }: { params: Promise<{ lo
             <CardHeader className="bg-[#faf8f2] border-b border-[#e2decb] p-5 flex flex-row items-center justify-between">
               <div>
                 <CardTitle className="text-base font-black text-[#0c3823]">{tPayments('title')}</CardTitle>
-                <CardDescription className="text-xs text-slate-500">Direct Benefit Transfer (DBT)</CardDescription>
+                <CardDescription className="text-xs text-slate-500">{tPayments('dbtSubtitle')}</CardDescription>
               </div>
               <Link href={`/${locale}/farmer/payments`}>
                 <span className="text-xs font-bold text-emerald-800 hover:underline">{tFarmer('viewAll')} →</span>
@@ -468,7 +468,7 @@ export default async function FarmerDashboard({ params }: { params: Promise<{ lo
             </CardHeader>
             <CardContent className="p-5 space-y-3 text-xs">
               <div className="flex justify-between items-center border-b border-slate-100 pb-2">
-                <span className="text-slate-500 font-medium">Total DBT Received:</span>
+                <span className="text-slate-500 font-medium">{tPayments('totalDbtReceived')}</span>
                 <strong className="text-xl font-black text-[#0c3823]">
                   ₹ {totalReceived.toLocaleString('en-IN')}
                 </strong>
@@ -476,18 +476,18 @@ export default async function FarmerDashboard({ params }: { params: Promise<{ lo
               <div className="flex justify-between items-center border-b border-slate-100 pb-2">
                 <span className="text-slate-500 font-medium">{tPayments('paymentStatus')}:</span>
                 <span className="bg-emerald-100 text-emerald-900 font-black px-2.5 py-0.5 rounded-full flex items-center space-x-1">
-                  <span>Credited</span>
+                  <span>{tPayments('credited')}</span>
                   <span>✅</span>
                 </span>
               </div>
               <div className="flex justify-between items-center border-b border-slate-100 pb-2">
-                <span className="text-slate-500 font-medium">Aadhaar Bank Account:</span>
+                <span className="text-slate-500 font-medium">{tPayments('aadhaarBankAccount')}:</span>
                 <strong className="text-slate-800">
                   {latestPayment?.bankAccountMasked || farmerProfile?.bankAccountMasked || "XXXX-XXXX-4892"}
                 </strong>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-slate-500 font-medium">Transaction Reference:</span>
+                <span className="text-slate-500 font-medium">{tPayments('transactionReference')}:</span>
                 <strong className="text-slate-800 font-mono text-[10px]">
                   {latestPayment?.transactionId || "TXN-9847102948"}
                 </strong>

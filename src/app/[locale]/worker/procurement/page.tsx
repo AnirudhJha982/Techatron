@@ -23,24 +23,31 @@ export default async function WorkerProcurementFormPage({ params, searchParams }
     redirect(`/${locale}/worker/booking`)
   }
 
-  // Fetch active bookings for selection
-  let bookings: any[] = []
+  // Fetch active bookings for selection (SCHEDULED, ARRIVED, or PROCESSING)
   const rawBookings = await Booking.find({
     centreId: workerProfile.centreId,
-    status: { $in: ['ARRIVED', 'PROCESSING'] }
-  }).lean()
+    status: { $in: ['SCHEDULED', 'ARRIVED', 'PROCESSING'] }
+  }).sort({ createdAt: -1 }).lean()
 
-    bookings = await Promise.all(
-      rawBookings.map(async (b) => {
-        const farmerProfile = await FarmerProfile.findById(b.farmerId).lean()
-        const farmerUser = farmerProfile ? await User.findById(farmerProfile.userId).lean() : null
-        return {
-          id: b._id.toString(),
-          tokenNumber: b.tokenNumber,
-          farmerName: farmerUser?.name || 'Farmer',
-          farmerPhone: farmerUser?.phoneNumber || 'N/A'
-        }
-      })
+  if (bookingId && !rawBookings.some(b => b._id.toString() === bookingId)) {
+    const specificBooking = await Booking.findById(bookingId).lean()
+    if (specificBooking) {
+      rawBookings.unshift(specificBooking)
+    }
+  }
+
+  const bookings = await Promise.all(
+    rawBookings.map(async (b) => {
+      const farmerProfile = await FarmerProfile.findById(b.farmerId).lean()
+      const farmerUser = farmerProfile ? await User.findById(farmerProfile.userId).lean() : null
+      return {
+        id: b._id.toString(),
+        tokenNumber: b.tokenNumber,
+        status: b.status,
+        farmerName: farmerUser?.name || 'Farmer',
+        farmerPhone: farmerUser?.phoneNumber || 'N/A'
+      }
+    })
   )
 
   const selectedBooking = bookingId ? bookings.find(b => b.id === bookingId) || bookings[0] : bookings[0]
@@ -67,6 +74,31 @@ export default async function WorkerProcurementFormPage({ params, searchParams }
             "use server"
             await submitProcurementAction(formData)
           }} className="space-y-4">
+            {bookings.length === 0 && (
+              <div className="bg-amber-50 border border-amber-300 p-4 rounded-xl text-amber-900 text-xs space-y-2">
+                <div className="font-bold flex items-center space-x-1.5 text-amber-950 text-sm">
+                  <span>⚠️</span>
+                  <span>No Active Farmer Tokens for this Mandi</span>
+                </div>
+                <p>
+                  There are currently no active slot bookings waiting at <strong>{centre?.name}</strong>.
+                  Farmers must book a procurement slot first.
+                </p>
+                <div className="pt-1 flex gap-2">
+                  <Link href={`/${locale}/worker/queue`}>
+                    <Button type="button" size="sm" variant="outline" className="text-xs font-bold border-amber-400">
+                      📋 Live Queue Board
+                    </Button>
+                  </Link>
+                  <Link href={`/${locale}/worker/booking`}>
+                    <Button type="button" size="sm" variant="outline" className="text-xs font-bold border-amber-400">
+                      🏢 Switch Mandi Centre
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            )}
+
             <div className="space-y-1.5">
               <Label htmlFor="bookingId">Select Farmer Token *</Label>
               <select
@@ -74,13 +106,18 @@ export default async function WorkerProcurementFormPage({ params, searchParams }
                 name="bookingId"
                 defaultValue={selectedBooking?.id || ''}
                 required
+                disabled={bookings.length === 0}
                 className="w-full border border-slate-300 rounded-lg p-3 text-sm bg-white focus:ring-2 focus:ring-green-600 focus:outline-none font-bold"
               >
-                {bookings.map(b => (
-                  <option key={b.id} value={b.id}>
-                    {b.tokenNumber} - {b.farmerName} ({b.farmerPhone})
-                  </option>
-                ))}
+                {bookings.length === 0 ? (
+                  <option value="" disabled>-- No tokens available for this centre --</option>
+                ) : (
+                  bookings.map(b => (
+                    <option key={b.id} value={b.id}>
+                      {b.tokenNumber} • {b.farmerName} ({b.farmerPhone}) — [{b.status}]
+                    </option>
+                  ))
+                )}
               </select>
             </div>
 
@@ -117,7 +154,7 @@ export default async function WorkerProcurementFormPage({ params, searchParams }
                 <select id="qualityGrade" name="qualityGrade" className="w-full border border-slate-300 rounded-lg p-2.5 text-sm bg-white">
                   <option value="Grade A">Grade A (Superior)</option>
                   <option value="Grade B">Grade B (Standard)</option>
-                  <option value="Grade C">Grade C (Fair Average)</option>
+                  <option value="Grade C">Fair Average Quality (FAQ)</option>
                 </select>
               </div>
               <div className="space-y-1.5">
@@ -138,7 +175,11 @@ export default async function WorkerProcurementFormPage({ params, searchParams }
               <p className="text-sm font-black text-green-800 pt-1">Total Payment Payable: ₹ 1,03,512 (Will initiate DBT to Farmer)</p>
             </div>
 
-            <Button type="submit" className="w-full bg-green-800 hover:bg-green-700 text-white font-bold h-12 text-base">
+            <Button
+              type="submit"
+              disabled={bookings.length === 0}
+              className="w-full bg-green-800 hover:bg-green-700 text-white font-bold h-12 text-base disabled:opacity-50 disabled:cursor-not-allowed"
+            >
               Submit Procurement & Initiate DBT Payment ⚖️
             </Button>
           </form>

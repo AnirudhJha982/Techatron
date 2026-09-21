@@ -55,8 +55,8 @@ export default function PublicFooter() {
           {/* Col 4: Contact & Helpline */}
           <div>
             <h3 className="text-white font-bold text-sm uppercase tracking-wider mb-4 border-b border-slate-800 pb-2">Kisan Helpline</h3>
-            <p className="text-xs text-slate-300 mb-2">Toll-Free National Support (24x7):</p>
-            <p className="text-xl font-black text-yellow-400 tracking-wider">1800-180-1551</p>
+            <p className="text-xs text-slate-300 mb-2">Toll-Free Support (24x7):</p>
+            <a href="tel:08047285316" className="text-xl font-black text-yellow-400 tracking-wider hover:underline inline-block">08047285316</a>
             <p className="text-[11px] text-slate-500 mt-2">Department of Agriculture & Farmers Welfare, Krishi Bhawan, New Delhi - 110001</p>
           </div>
         </div>

@@ -54,7 +54,7 @@ export default async function HelpPage({ params }: { params: Promise<{ locale: s
             <p className="text-green-100 text-xs mt-1">Available in 22 regional languages for instant phone assistance</p>
           </div>
           <div className="mt-4 sm:mt-0 text-center sm:text-right">
-            <p className="text-3xl font-black text-yellow-400">1800-180-1551</p>
+            <a href="tel:08047285316" className="text-3xl font-black text-yellow-400 hover:underline inline-block">08047285316</a>
             <p className="text-xs text-green-200">Free Call across India</p>
           </div>
         </div>

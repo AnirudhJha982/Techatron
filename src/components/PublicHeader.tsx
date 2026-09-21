@@ -21,7 +21,7 @@ export default function PublicHeader({ session }: { session?: any }) {
           <span className="font-medium text-slate-200">{t('department')}</span>
         </div>
         <div className="hidden md:flex items-center space-x-4 text-xs text-slate-300">
-          <span>{t('tollFree')}: <strong className="text-yellow-400 font-mono">1800-180-1551</strong></span>
+          <span>{t('tollFree')}: <a href="tel:08047285316" className="text-yellow-400 font-mono font-bold hover:underline">08047285316</a></span>
           <span className="text-green-300 font-semibold">MSP Season 2025-26</span>
         </div>
       </div>
